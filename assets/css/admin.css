@@ -1,0 +1,442 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+/* ==========================================================================
+   Design tokens
+   ========================================================================== */
+#wcu-app{
+  --wcu-font: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+
+  --wcu-primary: #0ea5a4;
+  --wcu-primary-dark: #0d9488;
+  --wcu-primary-light: #5eead4;
+  --wcu-primary-grad: linear-gradient(135deg,#14b8a6,#06b6d4);
+
+  --wcu-indigo: #4f46e5;
+  --wcu-purple: #7c3aed;
+  --wcu-blue: #2563eb;
+  --wcu-orange: #f97316;
+  --wcu-red: #ef4444;
+  --wcu-green: #10b981;
+
+  --wcu-ink: #0f172a;
+  --wcu-body: #334155;
+  --wcu-muted: #64748b;
+  --wcu-faint: #94a3b8;
+
+  --wcu-bg: #eef3f9;
+  --wcu-surface: #ffffff;
+  --wcu-surface-2: #f8fafc;
+  --wcu-border: #e7ecf3;
+  --wcu-border-soft: #eef2f7;
+
+  --wcu-r-sm: 8px;
+  --wcu-r-md: 10px;
+  --wcu-r-lg: 14px;
+  --wcu-r-xl: 18px;
+
+  --wcu-shadow-xs: 0 1px 2px rgba(15,23,42,.05);
+  --wcu-shadow-sm: 0 2px 6px rgba(15,23,42,.05), 0 1px 2px rgba(15,23,42,.04);
+  --wcu-shadow-md: 0 10px 26px -8px rgba(15,23,42,.14), 0 2px 8px rgba(15,23,42,.04);
+  --wcu-shadow-lg: 0 22px 48px -16px rgba(15,23,42,.22), 0 6px 16px -6px rgba(15,23,42,.08);
+  --wcu-shadow-glow: 0 10px 24px -6px rgba(14,165,164,.35);
+
+  --wcu-ease: cubic-bezier(.4,0,.2,1);
+}
+
+/* Dark theme tokens */
+#wcu-app.wcu-dark{
+  --wcu-ink: #f1f5f9;
+  --wcu-body: #cbd5e1;
+  --wcu-muted: #94a3b8;
+  --wcu-faint: #64748b;
+
+  --wcu-bg: #0a0f1a;
+  --wcu-surface: #121a2b;
+  --wcu-surface-2: #0d1420;
+  --wcu-border: #1f2937;
+  --wcu-border-soft: #1c2534;
+
+  --wcu-shadow-sm: 0 1px 0 rgba(255,255,255,.02);
+  --wcu-shadow-md: 0 10px 24px -8px rgba(0,0,0,.5);
+  --wcu-shadow-lg: 0 24px 48px -18px rgba(0,0,0,.6);
+}
+
+*, *::before, *::after{ box-sizing:border-box; }
+
+.wcu-wrap{
+  padding:26px;
+  font-family:var(--wcu-font);
+  background:
+    radial-gradient(1200px 400px at 100% -10%, rgba(14,165,164,.06), transparent 60%),
+    var(--wcu-bg);
+  border-radius:var(--wcu-r-lg);
+  color:var(--wcu-body);
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ==========================================================================
+   Top bar
+   ========================================================================== */
+.wcu-topbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:22px; gap:12px; flex-wrap:wrap; }
+.wcu-title h1{ margin:0; font-size:21px; font-weight:800; letter-spacing:-.02em; color:var(--wcu-ink); display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+
+.wcu-badge{ font-size:11px; font-weight:700; padding:4px 11px; border-radius:999px; letter-spacing:.3px; box-shadow:inset 0 0 0 1px rgba(15,23,42,.03); }
+.wcu-badge-active{ background:#dcfce7; color:#15803d; }
+.wcu-badge-version{ background:#eef2ff; color:#4338ca; }
+.wcu-pro{
+  background:linear-gradient(135deg,#fdba74,#f97316);
+  color:#7c2d12;
+  font-weight:800;
+  padding:2px 9px;
+  border-radius:6px;
+  margin-left:8px;
+  font-size:11.5px;
+  letter-spacing:.2px;
+  vertical-align:middle;
+  box-shadow:0 4px 10px -3px rgba(249,115,22,.5);
+}
+.wcu-sub{ margin:3px 0 0; color:var(--wcu-muted); font-size:13px; }
+
+.wcu-actions{ display:flex; gap:10px; align-items:center; }
+.wcu-btn{
+  padding:9px 14px; border-radius:var(--wcu-r-sm); border:1px solid var(--wcu-border);
+  font-weight:600; font-size:13px; text-decoration:none; display:inline-block; cursor:pointer;
+  background:var(--wcu-surface); color:var(--wcu-ink);
+  box-shadow:var(--wcu-shadow-xs);
+  transition:transform .15s var(--wcu-ease), box-shadow .15s var(--wcu-ease), border-color .15s var(--wcu-ease);
+}
+.wcu-btn:hover{ transform:translateY(-1px); box-shadow:var(--wcu-shadow-sm); border-color:#dbe4ee; }
+.wcu-btn:active{ transform:translateY(0); }
+
+.wcu-btn-outline{
+  background:transparent; color:var(--wcu-blue); border:1px solid #c7ddfb;
+  padding:9px 14px; border-radius:var(--wcu-r-sm);
+}
+.wcu-btn-outline:hover{ background:#eff6ff; }
+
+.wcu-btn-danger{
+  background:linear-gradient(135deg,#f87171,#ef4444); color:#fff; border-radius:var(--wcu-r-sm);
+  padding:10px 16px; border:none; font-weight:700;
+  box-shadow:0 10px 22px -6px rgba(239,68,68,.45);
+  transition:transform .15s var(--wcu-ease), box-shadow .15s var(--wcu-ease), filter .15s var(--wcu-ease);
+}
+.wcu-btn-danger:hover{ transform:translateY(-1px); filter:brightness(1.04); box-shadow:0 14px 26px -6px rgba(239,68,68,.5); }
+
+/* ==========================================================================
+   Environment banner
+   ========================================================================== */
+.wcu-env-banner{
+  display:flex; flex-wrap:wrap; gap:24px;
+  background:
+    radial-gradient(600px 200px at 90% 0%, rgba(255,255,255,.14), transparent 60%),
+    linear-gradient(135deg,#4f46e5,#7c3aed 55%,#a855f7);
+  border-radius:var(--wcu-r-lg);
+  padding:20px 24px;
+  margin-bottom:18px;
+  box-shadow:0 16px 36px -12px rgba(79,70,229,.4);
+  position:relative;
+  overflow:hidden;
+}
+.wcu-env-banner::after{
+  content:""; position:absolute; inset:0; pointer-events:none;
+  background:linear-gradient(180deg, rgba(255,255,255,.06), transparent 40%);
+}
+.wcu-env-item{ display:flex; align-items:center; gap:11px; color:#fff; min-width:140px; position:relative; z-index:1; }
+.wcu-env-icon{
+  font-size:20px; line-height:1; width:38px; height:38px; display:flex; align-items:center; justify-content:center;
+  background:rgba(255,255,255,.16); border-radius:10px; backdrop-filter:blur(2px);
+}
+.wcu-env-label{ font-size:10.5px; opacity:.85; text-transform:uppercase; letter-spacing:.6px; font-weight:600; }
+.wcu-env-value{ font-weight:700; font-size:14.5px; margin-top:1px; }
+
+/* ==========================================================================
+   Disk usage card
+   ========================================================================== */
+.wcu-disk-card{
+  background:var(--wcu-surface); padding:16px 20px; border-radius:var(--wcu-r-md);
+  box-shadow:var(--wcu-shadow-sm); border:1px solid var(--wcu-border-soft); margin-bottom:20px;
+}
+.wcu-disk-head{ display:flex; align-items:center; gap:8px; font-weight:700; color:var(--wcu-ink); margin-bottom:10px; font-size:13px; }
+.wcu-disk-figures{ margin-left:auto; color:var(--wcu-muted); font-weight:500; font-size:12px; font-variant-numeric:tabular-nums; }
+.wcu-progress-track{ background:var(--wcu-surface-2); border-radius:999px; height:10px; overflow:hidden; box-shadow:inset 0 1px 2px rgba(15,23,42,.06); }
+.wcu-progress-fill{
+  background:linear-gradient(90deg,#0ea5a4,#22d3ee);
+  height:100%; border-radius:999px; transition:width .5s var(--wcu-ease);
+  box-shadow:0 0 12px rgba(34,211,238,.5);
+}
+
+/* ==========================================================================
+   Layout
+   ========================================================================== */
+.wcu-grid{ display:flex; gap:22px; align-items:flex-start; flex-wrap:wrap; }
+.wcu-left{ width:224px; }
+
+.wcu-sidebar{
+  background:linear-gradient(180deg,#0f172a,#0b1220 60%);
+  color:#fff; padding:16px; border-radius:var(--wcu-r-lg); min-height:520px;
+  box-shadow:var(--wcu-shadow-md); border:1px solid rgba(255,255,255,.04);
+}
+.wcu-sidebar ul{ list-style:none; padding:0; margin:0; }
+.wcu-sidebar li{
+  padding:10px 12px; border-radius:var(--wcu-r-sm); color:#cbd5e1; margin-bottom:4px; cursor:pointer;
+  transition:background .18s var(--wcu-ease), color .18s var(--wcu-ease), transform .18s var(--wcu-ease);
+  display:flex; align-items:center; gap:9px; font-size:13.5px; font-weight:500;
+}
+.wcu-sidebar li .dashicons{ font-size:16px; width:16px; height:16px; opacity:.85; }
+.wcu-sidebar li:hover{ background:rgba(255,255,255,.06); color:#fff; }
+.wcu-sidebar li.active{
+  background:var(--wcu-primary-grad); color:#fff; font-weight:700;
+  box-shadow:0 8px 18px -4px rgba(14,165,164,.55);
+}
+.wcu-sidebar li.active .dashicons{ opacity:1; }
+.wcu-sidebar li.wcu-sidebar-settings{ margin-top:12px; padding-top:16px; border-top:1px solid rgba(255,255,255,.1); }
+
+.wcu-main{ flex:1; min-width:320px; }
+
+/* ==========================================================================
+   Stat cards
+   ========================================================================== */
+.wcu-cards{ display:flex; gap:14px; margin-bottom:20px; flex-wrap:wrap; }
+.card{
+  background:var(--wcu-surface); padding:18px; border-radius:var(--wcu-r-md);
+  box-shadow:var(--wcu-shadow-sm); border:1px solid var(--wcu-border-soft);
+  width:220px; position:relative; overflow:hidden;
+  transition:transform .2s var(--wcu-ease), box-shadow .2s var(--wcu-ease), background .2s var(--wcu-ease), color .2s var(--wcu-ease);
+}
+.card:hover{ transform:translateY(-3px); box-shadow:var(--wcu-shadow-md); }
+.card .label{ color:var(--wcu-muted); font-size:12.5px; font-weight:500; }
+.card .value{ font-weight:800; margin-top:8px; font-size:19px; color:var(--wcu-ink); letter-spacing:-.01em; }
+.card-icon{
+  font-size:18px; margin-bottom:8px; width:34px; height:34px; border-radius:9px;
+  display:flex; align-items:center; justify-content:center; background:var(--wcu-surface-2);
+}
+.card-blob::after{ content:""; position:absolute; top:-34px; right:-34px; width:100px; height:100px; border-radius:50%; opacity:.14; z-index:0; filter:blur(2px); }
+.card-blob .card-icon, .card-blob .label, .card-blob .value{ position:relative; z-index:1; }
+.card-blue::after{ background:var(--wcu-blue); }
+.card-blue .card-icon{ color:var(--wcu-blue); }
+.card-teal::after{ background:var(--wcu-primary); }
+.card-teal .card-icon{ color:var(--wcu-primary-dark); }
+.card-purple::after{ background:var(--wcu-purple); }
+.card-purple .card-icon{ color:var(--wcu-purple); }
+.card-orange::after{ background:var(--wcu-orange); }
+.card-orange .card-icon{ color:var(--wcu-orange); }
+
+/* ==========================================================================
+   Dashboard main: score + quick actions
+   ========================================================================== */
+.wcu-dashboard-main{ display:flex; gap:18px; align-items:flex-start; flex-wrap:wrap; }
+
+.wcu-score{
+  width:320px; background:var(--wcu-surface); padding:24px; border-radius:var(--wcu-r-md);
+  text-align:center; box-shadow:var(--wcu-shadow-sm); border:1px solid var(--wcu-border-soft);
+}
+.score-circle{
+  height:124px; width:124px; border-radius:50%;
+  background:conic-gradient(var(--wcu-primary) var(--wcu-score-deg,0deg), var(--wcu-surface-2) 0deg);
+  display:flex; align-items:center; justify-content:center; margin:0 auto 14px; position:relative;
+  box-shadow:var(--wcu-shadow-xs);
+}
+.score-circle::before{ content:""; position:absolute; inset:9px; border-radius:50%; background:var(--wcu-surface); box-shadow:inset 0 1px 3px rgba(15,23,42,.05); }
+.score-circle span{ position:relative; z-index:1; font-size:32px; font-weight:800; color:#059669; letter-spacing:-.02em; }
+.wcu-score-list{ list-style:none; padding:0; margin:16px 0 0; text-align:left; font-size:13px; color:var(--wcu-body); }
+.wcu-score-list li{ padding:6px 0; }
+
+.wcu-quick{
+  flex:1; background:var(--wcu-surface); padding:22px; border-radius:var(--wcu-r-md);
+  box-shadow:var(--wcu-shadow-sm); border:1px solid var(--wcu-border-soft); min-width:280px;
+}
+.wcu-quick.full{ width:100%; }
+.wcu-chart-wrap{ position:relative; height:260px; overflow:hidden; }
+.wcu-chart-wrap canvas{ max-width:100%; }
+.wcu-chart-empty{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:var(--wcu-faint); font-size:13px; text-align:center; padding:20px; }
+
+.quick-list{ display:flex; flex-wrap:wrap; gap:9px; margin-top:12px; }
+.wcu-quick .button{
+  padding:9px 14px; border-radius:var(--wcu-r-sm); border:1px solid var(--wcu-border); background:var(--wcu-surface);
+  cursor:pointer; font-weight:600; font-size:12.5px; color:var(--wcu-ink);
+  transition:border-color .15s var(--wcu-ease), background .15s var(--wcu-ease), transform .15s var(--wcu-ease);
+}
+.wcu-quick .button:hover{ border-color:var(--wcu-primary); background:#f0fdfa; transform:translateY(-1px); }
+
+.wcu-result{ margin-top:16px; background:var(--wcu-surface-2); padding:16px; border-radius:var(--wcu-r-sm); border:1px solid var(--wcu-border-soft); }
+#wcu-result-pre, #wcu-db-result{ white-space:pre-wrap; word-break:break-word; font-size:12.5px; color:var(--wcu-ink); max-height:320px; overflow:auto; font-family:ui-monospace,Consolas,monospace; }
+.wcu-panel{ margin-top:4px; }
+
+/* ==========================================================================
+   Health / performance audit
+   ========================================================================== */
+.wcu-health-card{ margin-top:18px; }
+.wcu-health-card h3{ margin:0 0 4px; color:var(--wcu-ink); font-weight:700; }
+.wcu-health-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:11px; margin-top:14px; }
+.wcu-health-item{
+  display:flex; gap:11px; align-items:flex-start; padding:13px; border-radius:var(--wcu-r-sm);
+  background:var(--wcu-surface-2); border:1px solid var(--wcu-border-soft);
+  transition:transform .15s var(--wcu-ease), box-shadow .15s var(--wcu-ease);
+}
+.wcu-health-item:hover{ transform:translateY(-2px); box-shadow:var(--wcu-shadow-xs); }
+.wcu-health-item.ok{ background:#f0fdf4; border-color:#bbf7d0; }
+.wcu-health-item.warn{ background:#fff7ed; border-color:#fed7aa; }
+.wcu-health-icon{ font-size:15px; font-weight:800; line-height:1.4; }
+.wcu-health-item.ok .wcu-health-icon{ color:#16a34a; }
+.wcu-health-item.warn .wcu-health-icon{ color:#ea580c; }
+.wcu-health-label{ font-weight:700; font-size:12.5px; color:var(--wcu-ink); }
+.wcu-health-detail{ font-size:11.5px; color:var(--wcu-muted); margin-top:3px; line-height:1.5; }
+#wcu-app.wcu-dark .wcu-health-item{ background:#111827; border-color:#1f2937; }
+#wcu-app.wcu-dark .wcu-health-item.ok{ background:#052e1c; border-color:#14532d; }
+#wcu-app.wcu-dark .wcu-health-item.warn{ background:#2a1a06; border-color:#7c2d12; }
+#wcu-app.wcu-dark .wcu-health-label{ color:#e2e8f0; }
+#wcu-app.wcu-dark .wcu-health-detail{ color:#94a3b8; }
+
+/* ==========================================================================
+   Settings select control
+   ========================================================================== */
+.wcu-setting-control select{
+  padding:9px 13px; border:1px solid var(--wcu-border); border-radius:var(--wcu-r-sm); font-size:13px;
+  min-width:200px; font-family:var(--wcu-font); background:var(--wcu-surface); color:var(--wcu-ink);
+  transition:border-color .15s var(--wcu-ease), box-shadow .15s var(--wcu-ease);
+}
+.wcu-setting-control select:focus{ outline:none; border-color:var(--wcu-primary); box-shadow:0 0 0 3px rgba(14,165,164,.15); }
+#wcu-app.wcu-dark .wcu-setting-control select{ background:#0b1220; border-color:#1f2937; color:#e2e8f0; }
+
+/* ==========================================================================
+   Settings page — card layout
+   ========================================================================== */
+.wcu-settings-header{ display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:22px; }
+.wcu-settings-header h1{ margin:0; font-size:21px; font-weight:800; letter-spacing:-.02em; color:var(--wcu-ink); font-family:var(--wcu-font); }
+
+.wcu-settings-tabs{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:22px; }
+.wcu-settings-tabs a{
+  padding:9px 17px; border-radius:999px; background:var(--wcu-surface); color:var(--wcu-muted);
+  font-weight:600; font-size:13px; text-decoration:none; box-shadow:var(--wcu-shadow-xs);
+  transition:all .18s var(--wcu-ease); border:1px solid var(--wcu-border-soft);
+}
+.wcu-settings-tabs a:hover{ background:var(--wcu-surface-2); color:var(--wcu-ink); transform:translateY(-1px); }
+.wcu-settings-tabs a.active{
+  background:var(--wcu-primary-grad); color:#fff; border-color:transparent;
+  box-shadow:0 8px 20px -4px rgba(14,165,164,.4);
+}
+
+.wcu-setting-card{
+  background:var(--wcu-surface); border-radius:var(--wcu-r-lg); padding:24px 26px;
+  box-shadow:var(--wcu-shadow-sm); border:1px solid var(--wcu-border-soft); margin-bottom:18px; max-width:900px;
+}
+.wcu-setting-card h2{ margin:0 0 4px; font-size:15.5px; font-weight:700; font-family:var(--wcu-font); color:var(--wcu-ink); }
+.wcu-setting-card .wcu-card-desc{ color:var(--wcu-muted); font-size:12.5px; margin:0 0 6px; }
+.wcu-setting-row{ display:flex; justify-content:space-between; align-items:center; gap:24px; padding:15px 0; border-bottom:1px solid var(--wcu-border-soft); }
+.wcu-setting-row:first-of-type{ padding-top:15px; }
+.wcu-setting-row:last-child{ border-bottom:none; }
+.wcu-setting-info{ flex:1; min-width:0; }
+.wcu-setting-label{ font-weight:600; font-size:13.5px; color:var(--wcu-ink); display:block; }
+.wcu-setting-info p{ margin:4px 0 0; color:var(--wcu-muted); font-size:12px; line-height:1.55; }
+.wcu-setting-control{ flex-shrink:0; }
+.wcu-setting-control input[type=number], .wcu-setting-control input[type=text], .wcu-setting-control input[type=password]{
+  padding:9px 13px; border:1px solid var(--wcu-border); border-radius:var(--wcu-r-sm); font-size:13px;
+  min-width:200px; font-family:var(--wcu-font); background:var(--wcu-surface); color:var(--wcu-ink);
+  transition:border-color .15s var(--wcu-ease), box-shadow .15s var(--wcu-ease);
+}
+.wcu-setting-control input:focus{ outline:none; border-color:var(--wcu-primary); box-shadow:0 0 0 3px rgba(14,165,164,.15); }
+.wcu-setting-full{ padding:15px 0; }
+.wcu-setting-full textarea{
+  width:100%; padding:13px; border:1px solid var(--wcu-border); border-radius:var(--wcu-r-sm);
+  font-family:ui-monospace,Consolas,monospace; font-size:12.5px; resize:vertical; background:var(--wcu-surface); color:var(--wcu-ink);
+  transition:border-color .15s var(--wcu-ease), box-shadow .15s var(--wcu-ease);
+}
+.wcu-setting-full textarea:focus{ outline:none; border-color:var(--wcu-primary); box-shadow:0 0 0 3px rgba(14,165,164,.15); }
+.wcu-setting-full p.description{ margin:6px 0 0; color:var(--wcu-muted); font-size:12px; }
+.wcu-code-block{
+  width:100%; padding:15px; border:1px solid var(--wcu-border); border-radius:var(--wcu-r-sm);
+  font-family:ui-monospace,Consolas,monospace; font-size:12px; background:var(--wcu-surface-2); color:var(--wcu-ink);
+}
+.wcu-card-sep{ border:none; border-top:1px solid var(--wcu-border-soft); margin:20px 0; }
+
+.wcu-preset-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:15px; margin-top:15px; }
+.wcu-preset-card{
+  background:var(--wcu-surface-2); border-radius:var(--wcu-r-md); border-left:4px solid var(--wcu-faint);
+  padding:17px 19px; display:flex; flex-direction:column; gap:9px;
+  transition:transform .18s var(--wcu-ease), box-shadow .18s var(--wcu-ease);
+}
+.wcu-preset-card:hover{ transform:translateY(-2px); box-shadow:var(--wcu-shadow-sm); }
+.wcu-preset-card-head{ font-size:14px; font-weight:700; color:var(--wcu-ink); }
+.wcu-preset-card p{ margin:0; font-size:12.5px; color:var(--wcu-muted); line-height:1.55; flex:1; }
+.wcu-preset-card .button{ align-self:flex-start; }
+#wcu-app.wcu-dark .wcu-preset-card{ background:#0b1220; }
+#wcu-app.wcu-dark .wcu-preset-card p{ color:#94a3b8; }
+
+/* ==========================================================================
+   Toggle switch
+   ========================================================================== */
+.wcu-switch{ position:relative; display:inline-block; width:42px; height:24px; flex-shrink:0; }
+.wcu-switch input{ opacity:0; width:0; height:0; position:absolute; }
+.wcu-switch .wcu-slider{
+  position:absolute; cursor:pointer; inset:0; background:#cbd5e1; border-radius:999px;
+  transition:background .2s var(--wcu-ease), box-shadow .2s var(--wcu-ease);
+}
+.wcu-switch .wcu-slider::before{
+  content:""; position:absolute; height:18px; width:18px; left:3px; top:3px; background:#fff; border-radius:50%;
+  transition:transform .2s var(--wcu-ease); box-shadow:0 2px 4px rgba(0,0,0,.25);
+}
+.wcu-switch input:checked + .wcu-slider{ background:var(--wcu-primary-grad); }
+.wcu-switch input:checked + .wcu-slider::before{ transform:translateX(18px); }
+.wcu-switch input:focus-visible + .wcu-slider{ box-shadow:0 0 0 3px rgba(14,165,164,.3); }
+
+.wcu-save-bar{ position:sticky; bottom:0; padding:18px 0 4px; margin-top:6px; }
+.wcu-btn-primary{
+  background:var(--wcu-primary-grad); color:#fff; border:none; border-radius:var(--wcu-r-sm);
+  padding:11px 24px; font-weight:700; font-size:13.5px; cursor:pointer;
+  box-shadow:var(--wcu-shadow-glow); transition:transform .15s var(--wcu-ease), box-shadow .15s var(--wcu-ease), filter .15s var(--wcu-ease);
+}
+.wcu-btn-primary:hover{ transform:translateY(-1px); filter:brightness(1.05); color:#fff; box-shadow:0 14px 28px -6px rgba(14,165,164,.45); }
+.wcu-btn-primary:active{ transform:translateY(0); }
+
+/* ==========================================================================
+   Dark mode — settings
+   ========================================================================== */
+#wcu-app.wcu-dark .wcu-settings-tabs a{ background:#111827; color:#94a3b8; box-shadow:none; border:1px solid #1f2937; }
+#wcu-app.wcu-dark .wcu-settings-tabs a.active{ background:var(--wcu-primary-grad); color:#fff; border-color:transparent; }
+#wcu-app.wcu-dark .wcu-setting-card{ background:#111827; color:#e2e8f0; box-shadow:none; border:1px solid #1f2937; }
+#wcu-app.wcu-dark .wcu-setting-card h2{ color:#e2e8f0; }
+#wcu-app.wcu-dark .wcu-setting-row{ border-bottom-color:#1f2937; }
+#wcu-app.wcu-dark .wcu-setting-label{ color:#e2e8f0; }
+#wcu-app.wcu-dark .wcu-setting-control input, #wcu-app.wcu-dark .wcu-setting-full textarea{ background:#0b1220; border-color:#1f2937; color:#e2e8f0; }
+#wcu-app.wcu-dark .wcu-code-block{ background:#0b1220; border-color:#1f2937; color:#cbd5e1; }
+#wcu-app.wcu-dark .wcu-card-sep{ border-top-color:#1f2937; }
+
+/* ==========================================================================
+   Toasts
+   ========================================================================== */
+.wcu-toast{
+  position:fixed; bottom:26px; right:26px; background:#0b1220; color:#fff; padding:13px 20px; border-radius:var(--wcu-r-sm);
+  font-size:13px; font-weight:500; opacity:0; transform:translateY(12px) scale(.98);
+  transition:opacity .3s var(--wcu-ease), transform .3s var(--wcu-ease); z-index:99999;
+  box-shadow:0 16px 32px -8px rgba(2,6,23,.35);
+}
+.wcu-toast.show{ opacity:1; transform:translateY(0) scale(1); }
+.wcu-toast-success{ background:linear-gradient(135deg,#10b981,#059669); }
+.wcu-toast-error{ background:linear-gradient(135deg,#f87171,#ef4444); }
+
+/* ==========================================================================
+   Dark mode — global
+   ========================================================================== */
+#wcu-app.wcu-dark.wcu-wrap{ background:var(--wcu-bg); }
+#wcu-app.wcu-dark .wcu-sub{ color:#94a3b8; }
+#wcu-app.wcu-dark .card, #wcu-app.wcu-dark .wcu-score, #wcu-app.wcu-dark .wcu-quick, #wcu-app.wcu-dark .wcu-result{
+  background:#111827; color:#e2e8f0; box-shadow:none; border:1px solid #1f2937;
+}
+#wcu-app.wcu-dark .card .label{ color:#94a3b8; }
+#wcu-app.wcu-dark #wcu-result-pre, #wcu-app.wcu-dark #wcu-db-result{ color:#e2e8f0; }
+#wcu-app.wcu-dark .wcu-btn-outline{ color:#93c5fd; border-color:#1e3a5f; }
+#wcu-app.wcu-dark .wcu-score-list{ color:#cbd5e1; }
+#wcu-app.wcu-dark table.widefat{ background:#111827; color:#e2e8f0; }
+#wcu-app.wcu-dark .wcu-disk-card{ background:#111827; color:#e2e8f0; box-shadow:none; border:1px solid #1f2937; }
+#wcu-app.wcu-dark .wcu-disk-head{ color:#e2e8f0; }
+#wcu-app.wcu-dark .wcu-progress-track{ background:#1f2937; }
+#wcu-app.wcu-dark .score-circle::before{ background:#111827; }
+#wcu-app.wcu-dark .wcu-badge-active{ background:#064e3b; color:#6ee7b7; }
+#wcu-app.wcu-dark .wcu-badge-version{ background:#1e1b4b; color:#a5b4fc; }
+
+/* ==========================================================================
+   Motion & accessibility
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce){
+  .wcu-wrap *{ transition:none !important; animation:none !important; }
+}
