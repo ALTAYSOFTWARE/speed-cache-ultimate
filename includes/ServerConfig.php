@@ -34,7 +34,15 @@ class ServerConfig {
         );
 
         $cache_dir = PageCache::cache_root();
-        $writable  = is_dir( $cache_dir ) ? is_writable( $cache_dir ) : is_writable( dirname( $cache_dir ) );
+        global $wp_filesystem;
+        if ( empty( $wp_filesystem ) ) {
+            require_once( ABSPATH . 'wp-admin/includes/file.php' );
+            WP_Filesystem();
+        }
+        $writable = false;
+        if ( ! empty( $wp_filesystem ) ) {
+            $writable = $wp_filesystem->is_writable( $cache_dir ) || $wp_filesystem->is_writable( dirname( $cache_dir ) );
+        }
         $checks['cache_dir'] = array(
             'label'  => 'Önbellek Dizini Yazma İzni',
             'ok'     => (bool) $writable,

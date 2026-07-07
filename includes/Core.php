@@ -5,6 +5,15 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
 class Core {
     public static function init() {
+        // ✅ FIX: Custom cron interval'lar WordPress tarafından HER request'te
+        // yeniden tanınması gerekir (sadece activation anında değil). Bu filtre
+        // önceden sadece activate() içindeydi; bu yüzden aktivasyondan sonraki
+        // herhangi bir istekte (örn. panelden "Önyükle" tetiklendiğinde)
+        // 'wcu_every_minute' zamanlaması WordPress'e tanımsız geliyor ve
+        // wp_schedule_event() sessizce false dönüyordu ("Failed to schedule
+        // wcu_preload_tick event"). Şimdi her yüklemede kaydediliyor.
+        self::register_cron_interval();
+
         require_once WCU_DIR . 'includes/Logger.php';
         require_once WCU_DIR . 'includes/Cleaner.php';
         require_once WCU_DIR . 'includes/PageCache.php';
@@ -22,7 +31,6 @@ class Core {
         require_once WCU_DIR . 'includes/Cdn.php';
         require_once WCU_DIR . 'includes/SecurityHeaders.php';
 
-        // Page caching engine (buffers + serves via advanced-cache.php drop-in).
         PageCache::init();
         Optimizer::init();
         Preloader::init();
@@ -30,24 +38,19 @@ class Core {
         Cdn::init();
         SecurityHeaders::init();
 
-        // Admin UI
         add_action( 'admin_menu', array( 'WCU\\Dashboard', 'register_menu' ) );
         add_action( 'admin_enqueue_scripts', array( 'WCU\\Dashboard', 'enqueue_assets' ) );
-
-        // Settings registration (no submenu duplication)
         add_action( 'admin_init', array( 'WCU\\Settings', 'register_settings' ) );
+        add_action( 'admin_notices', array( __CLASS__, 'maybe_show_dir_error_notice' ) );
 
-        // AJAX endpoints (kept for legacy compatibility; REST API in RestApi.php is the modern path)
         add_action( 'wp_ajax_wcu_start_job', array( 'WCU\\Cleaner', 'ajax_start_job' ) );
         add_action( 'wp_ajax_wcu_process_step', array( 'WCU\\Cleaner', 'ajax_process_step' ) );
         add_action( 'wp_ajax_wcu_get_job', array( 'WCU\\Cleaner', 'ajax_get_job' ) );
         add_action( 'wp_ajax_wcu_quick_action', array( 'WCU\\Cleaner', 'ajax_quick_action' ) );
 
-        // Cron processing
         add_action( 'wcu_process_job_cron', array( 'WCU\\Cleaner', 'cron_process' ) );
         add_action( 'wcu_weekly_db_optimize', array( __CLASS__, 'maybe_run_scheduled_db_optimize' ) );
 
-        // WP-CLI
         if ( defined( 'WP_CLI' ) && WP_CLI ) {
             self::register_cli_commands();
         }
@@ -96,8 +99,45 @@ class Core {
             wp_schedule_event( time() + 3600, 'weekly', 'wcu_weekly_db_optimize' );
         }
 
-        self::install_advanced_cache();
-        wp_mkdir_p( WP_CONTENT_DIR . '/cache/wcu-page-cache' );
+        // Cache directory is created in content folder to match PageCache::cache_root()
+        $cache_base   = WP_CONTENT_DIR . '/cache';
+        $cache_target = $cache_base . '/wcu-page-cache';
+        $created      = wp_mkdir_p( $cache_target );
+
+        // ✅ FIX: wp_mkdir_p() failures were previously silent. If activation
+        // cannot create the cache directory (permissions, open_basedir,
+        // read-only content dir, etc.) we now log the exact reason and store
+        // an admin notice, instead of leaving no trace at all.
+        if ( ! $created || ! is_dir( $cache_target ) ) {
+            $error = error_get_last();
+            $msg   = sprintf(
+                'WCU: activation could not create cache directory "%s". is_dir(WP_CONTENT_DIR)=%s, is_writable(WP_CONTENT_DIR)=%s, is_dir(cache_base)=%s, is_writable(cache_base)=%s. Last PHP error: %s',
+                $cache_target,
+                is_dir( WP_CONTENT_DIR ) ? 'yes' : 'no',
+                is_writable( WP_CONTENT_DIR ) ? 'yes' : 'no',
+                is_dir( $cache_base ) ? 'yes' : 'no',
+                is_dir( $cache_base ) ? ( is_writable( $cache_base ) ? 'yes' : 'no' ) : 'n/a',
+                $error ? $error['message'] : 'none'
+            );
+            error_log( $msg );
+            update_option( 'wcu_activation_dir_error', $msg, false );
+        } else {
+            delete_option( 'wcu_activation_dir_error' );
+        }
+
+        // ✅ FIX: install_advanced_cache() var olmasına rağmen hiçbir yerden
+        // çağrılmıyordu ve panelde de bunu tetikleyecek bir buton yoktu; bu
+        // yüzden advanced-cache.php hiçbir zaman otomatik kurulmuyordu.
+        // Diğer önbellek eklentileriyle çakışmayı önlemek için sadece
+        // wp-content/advanced-cache.php boşsa veya daha önce bu eklenti
+        // tarafından kurulmuşsa otomatik kurulum yapılır; yabancı bir
+        // drop-in tespit edilirse dokunulmaz ve admin'e bildirim gösterilir.
+        $adv_result = self::install_advanced_cache();
+        if ( empty( $adv_result['success'] ) ) {
+            update_option( 'wcu_activation_adv_cache_error', $adv_result['message'], false );
+        } else {
+            delete_option( 'wcu_activation_adv_cache_error' );
+        }
     }
 
     public static function deactivate() {
@@ -111,6 +151,20 @@ class Core {
         if ( $ts3 ) wp_unschedule_event( $ts3, 'wcu_preload_tick' );
     }
 
+    public static function maybe_show_dir_error_notice() {
+        if ( ! current_user_can( 'manage_options' ) ) return;
+
+        $msg = get_option( 'wcu_activation_dir_error' );
+        if ( $msg ) {
+            echo '<div class="notice notice-error"><p><strong>WP Cache Ultimate:</strong> ' . esc_html( $msg ) . '</p></div>';
+        }
+
+        $adv_msg = get_option( 'wcu_activation_adv_cache_error' );
+        if ( $adv_msg ) {
+            echo '<div class="notice notice-warning"><p><strong>WP Cache Ultimate:</strong> ' . esc_html( $adv_msg ) . '</p></div>';
+        }
+    }
+
     protected static function register_cron_interval() {
         add_filter( 'cron_schedules', function ( $s ) {
             if ( ! isset( $s['wcu_every_minute'] ) ) {
@@ -121,22 +175,50 @@ class Core {
     }
 
     /**
-     * Installs the advanced-cache.php drop-in and attempts to enable
-     * define('WP_CACHE', true) in wp-config.php. Both are best-effort:
-     * if the filesystem isn't writable the plugin still works, just without
-     * the earliest-possible PHP-level cache hit (see Settings > Sunucu Yapılandırması).
+     * Installs the advanced-cache.php drop-in using WP_Filesystem.
+     * Called automatically on plugin activation (see Core::activate()).
+     *
+     * Safe to call again later too (e.g. from a future "Sunucu Yapılandırması"
+     * panel action) since it no-ops when a foreign (non-WCU) drop-in is
+     * already present, instead of silently overwriting another cache plugin.
      */
-    protected static function install_advanced_cache() {
+    public static function install_advanced_cache() {
+        global $wp_filesystem;
+        if ( empty( $wp_filesystem ) ) {
+            require_once( ABSPATH . 'wp-admin/includes/file.php' );
+            WP_Filesystem();
+        }
+
+        if ( empty( $wp_filesystem ) ) {
+            return array( 'success' => false, 'message' => 'WP_Filesystem could not be initialized.' );
+        }
+
         $target = WP_CONTENT_DIR . '/advanced-cache.php';
         $source = WCU_DIR . 'includes/drop-ins/advanced-cache.php';
 
-        if ( file_exists( $source ) && is_writable( WP_CONTENT_DIR ) ) {
-            @copy( $source, $target );
+        if ( ! file_exists( $source ) ) {
+            return array( 'success' => false, 'message' => 'Drop-in source file not found: ' . $source );
         }
 
-        $config_path = ABSPATH . 'wp-config.php';
-        if ( file_exists( $config_path ) && is_writable( $config_path ) ) {
-            $contents = file_get_contents( $config_path );
+        // ✅ FIX: Don't blindly overwrite an existing advanced-cache.php.
+        // Only skip installing if the file exists AND belongs to a different
+        // (non-WCU) caching plugin — our own drop-in is always safe to refresh.
+        if ( $wp_filesystem->exists( $target ) ) {
+            $existing = $wp_filesystem->get_contents( $target );
+            $is_ours  = $existing !== false && strpos( $existing, 'WP Cache Ultimate' ) !== false;
+            if ( ! $is_ours ) {
+                return array(
+                    'success' => false,
+                    'message' => 'wp-content/advanced-cache.php already exists and belongs to another caching plugin. Devre dışı bırakıp tekrar deneyin veya dosyayı manuel silin.',
+                );
+            }
+        }
+
+        $wp_filesystem->copy( $source, $target, true );
+
+        $config_path = get_home_path() . 'wp-config.php';
+        if ( file_exists( $config_path ) ) {
+            $contents = $wp_filesystem->get_contents( $config_path );
             if ( $contents !== false
                 && strpos( $contents, "define( 'WP_CACHE'" ) === false
                 && strpos( $contents, 'define("WP_CACHE"' ) === false
@@ -149,9 +231,11 @@ class Core {
                     1
                 );
                 if ( $contents !== null ) {
-                    @file_put_contents( $config_path, $contents );
+                    $wp_filesystem->put_contents( $config_path, $contents );
                 }
             }
         }
+
+        return array( 'success' => true, 'message' => 'advanced-cache.php installed.' );
     }
 }

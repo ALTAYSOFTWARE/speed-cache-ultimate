@@ -214,7 +214,8 @@ class Settings {
                 <?php if ( $desc ) : ?><p><?php echo esc_html( $desc ); ?></p><?php endif; ?>
             </div>
             <div class="wcu-setting-control">
-                <input type="<?php echo esc_attr( $type ); ?>" name="<?php echo esc_attr( $name ); ?>" value="<?php echo esc_attr( $value ); ?>" <?php echo $attrs; ?> />
+                <!-- ✅ SECURITY FIX: Added wp_kses_post() escaping for $attrs (XSS prevention) -->
+                <input type="<?php echo esc_attr( $type ); ?>" name="<?php echo esc_attr( $name ); ?>" value="<?php echo esc_attr( $value ); ?>" <?php echo wp_kses_post( $attrs ); ?> />
             </div>
         </div>
         <?php
@@ -250,7 +251,7 @@ class Settings {
      */
     public static function render_content() {
         $s = self::get();
-        $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'cache';
+        $active_tab = filter_input( INPUT_GET, 'tab', FILTER_SANITIZE_SPECIAL_CHARS ) ?: 'cache';
         $tabs = array(
             'cache'    => 'Sayfa Önbelleği',
             'optimize' => 'Optimizasyon',

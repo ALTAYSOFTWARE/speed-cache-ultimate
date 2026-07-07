@@ -27,6 +27,14 @@
         return d.toLocaleString();
     }
 
+    function fmtBytes(bytes) {
+        if (!bytes || bytes === 0) return '0 B';
+        var units = ['B', 'KB', 'MB', 'GB'];
+        var i = 0;
+        while (bytes >= 1024 && i < units.length - 1) { bytes /= 1024; i++; }
+        return bytes.toFixed(1).replace('.0', '') + ' ' + units[i];
+    }
+
     function initTabs() {
         var items = document.querySelectorAll('.wcu-sidebar li');
         var panels = document.querySelectorAll('.wcu-panel');
@@ -80,13 +88,10 @@
 
         var data = labels.map(function (k) { return logCounts[k]; });
 
-        // Grafik zaten varsa yok edip yeniden kurma; sadece verisini güncelle.
-        // Bu, işlem devam ederken (job/preload polling) her 1.5-2 saniyede bir
-        // grafiğin görünür şekilde "titremesini/yeniden çizilmesini" önler.
         if (chartInstance) {
             chartInstance.data.labels = labels;
             chartInstance.data.datasets[0].data = data;
-            chartInstance.update('none'); // animasyonsuz, sessiz güncelleme
+            chartInstance.update('none');
             return;
         }
 
@@ -163,6 +168,225 @@
         }
     }
 
+    var jobSteps = [
+        { key: 'page_cache', label: 'Sayfa önbelleği', icon: '📄' },
+        { key: 'transients', label: 'Transients', icon: '⚡' },
+        { key: 'object_cache', label: 'Nesne önbelleği', icon: '🧠' },
+        { key: 'cache_dirs', label: 'Cache dizinleri', icon: '🗂️' },
+        { key: 'db_optimize', label: 'Veritabanı', icon: '🗄️' },
+    ];
+
+    function renderJobCard(job) {
+        var card = document.getElementById('wcu-result');
+        var pctEl = document.getElementById('wcu-job-pct');
+        var bar = document.getElementById('wcu-progress-fill');
+        var grid = document.getElementById('wcu-step-grid');
+        var title = document.getElementById('wcu-job-title');
+        var sub = document.getElementById('wcu-job-sub');
+
+        if (!card || !job) return;
+        card.style.display = 'block';
+
+        var progress = job.progress || 0;
+        if (pctEl) pctEl.textContent = '%' + progress;
+        if (bar) bar.style.width = progress + '%';
+
+        if (title) title.textContent = job.title || 'Temizleme İşlemi';
+        if (sub) sub.textContent = job.status === 'running' ? 'Arka planda çalışıyor…' : 'Tamamlandı';
+
+        if (!grid) return;
+        grid.innerHTML = '';
+
+        var steps = job.steps || jobSteps;
+        steps.forEach(function (step, idx) {
+            var state = 'waiting';
+            var badgeClass = 'wait';
+            var badgeText = '○';
+            var detail = 'Bekliyor';
+
+            if (step.done) {
+                state = 'done';
+                badgeClass = 'ok';
+                badgeText = '✓';
+                detail = step.detail || 'Tamamlandı';
+            } else if (step.running) {
+                state = 'running';
+                badgeClass = 'run';
+                badgeText = '⋯';
+                detail = step.detail || 'İşleniyor…';
+            }
+
+            var div = document.createElement('div');
+            div.className = 'wcu-step-item ' + state;
+            div.innerHTML = '<span class="wcu-step-badge ' + badgeClass + '">' + badgeText + '</span>' +
+                '<div><div class="wcu-step-label">' + (step.label || step.name || step.key) + '</div>' +
+                '<div class="wcu-step-detail">' + detail + '</div></div>';
+            grid.appendChild(div);
+        });
+    }
+
+    function hideJobCard() {
+        var card = document.getElementById('wcu-result');
+        if (card) card.style.display = 'none';
+    }
+
+    function renderDbCards(data) {
+        var grid = document.getElementById('wcu-db-cards');
+        var detail = document.getElementById('wcu-db-detail');
+        var pre = document.getElementById('wcu-db-result');
+        if (!grid || !data) return;
+
+        grid.style.display = 'grid';
+        if (detail) detail.style.display = 'block';
+        if (pre) pre.style.display = 'none';
+
+        var cards = [];
+        if (data.revisions_deleted !== undefined) {
+            cards.push({ label: 'Revizyonlar', value: data.revisions_deleted.toLocaleString(), sub: 'Silindi ✓', color: 'yellow' });
+        }
+        if (data.drafts_deleted !== undefined) {
+            cards.push({ label: 'Oto. Taslaklar', value: data.drafts_deleted.toLocaleString(), sub: 'Silindi ✓', color: 'blue' });
+        }
+        if (data.spam_deleted !== undefined) {
+            cards.push({ label: 'Çöp Yorumlar', value: data.spam_deleted.toLocaleString(), sub: 'Silindi ✓', color: 'pink' });
+        }
+        if (data.tables_optimized !== undefined) {
+            var total = data.tables_total || data.tables_optimized;
+            cards.push({ label: 'Tablolar Optimize', value: data.tables_optimized + '/' + total, sub: 'Tüm tablolar ✓', color: 'green' });
+        }
+        if (data.space_saved !== undefined) {
+            cards.push({ label: 'Kazanılan Alan', value: fmtBytes(data.space_saved), sub: 'Toplam tasarruf', color: 'purple' });
+        }
+        if (data.transients_deleted !== undefined) {
+            cards.push({ label: 'Transientlar', value: data.transients_deleted.toLocaleString(), sub: 'Süresi dolmuş silindi', color: 'blue' });
+        }
+        if (data.orphan_meta_deleted !== undefined) {
+            cards.push({ label: 'Öksüz Meta', value: data.orphan_meta_deleted.toLocaleString(), sub: 'Temizlendi', color: 'pink' });
+        }
+
+        if (cards.length === 0) {
+            cards.push({ label: 'Optimizasyon', value: '✓', sub: 'Tamamlandı', color: 'green' });
+        }
+
+        grid.innerHTML = '';
+        cards.forEach(function (c) {
+            var div = document.createElement('div');
+            div.className = 'wcu-db-card ' + c.color;
+            div.innerHTML = '<div class="db-label">' + c.label + '</div>' +
+                '<div class="db-value">' + c.value + '</div>' +
+                '<div class="db-sub">' + c.sub + '</div>';
+            grid.appendChild(div);
+        });
+
+        if (detail) {
+            detail.innerHTML = '';
+            var rows = [];
+            if (data.tables) {
+                data.tables.forEach(function (t) {
+                    rows.push({ table: t.name, desc: (t.rows || '') + ' satır, ' + (t.space_saved || 'optimize edildi') });
+                });
+            }
+            if (rows.length === 0 && data.details) {
+                data.details.forEach(function (d) {
+                    rows.push({ table: d.table || d.name, desc: d.message || d.detail || 'İşlem tamamlandı' });
+                });
+            }
+            if (rows.length === 0) {
+                rows.push({ table: 'Veritabanı', desc: 'Tüm optimizasyon işlemleri başarıyla tamamlandı.' });
+            }
+            rows.forEach(function (r) {
+                var row = document.createElement('div');
+                row.className = 'wcu-db-row';
+                row.innerHTML = '<span class="db-check">✓</span><span class="db-table">' + r.table + '</span><span class="db-desc">' + r.desc + '</span>';
+                detail.appendChild(row);
+            });
+        }
+    }
+
+    function renderPreloadCard(preload) {
+        var card = document.getElementById('wcu-preload-card');
+        var pctEl = document.getElementById('wcu-preload-pct');
+        var bar = document.getElementById('wcu-preload-bar');
+        var stats = document.getElementById('wcu-preload-stats');
+        var status = document.getElementById('wcu-preload-status');
+
+        if (!card || !preload) return;
+        card.style.display = 'block';
+
+        var done = preload.done || 0;
+        var total = preload.total || 0;
+        var pct = total > 0 ? Math.round((done / total) * 100) : 0;
+
+        if (pctEl) pctEl.textContent = done + '/' + total;
+        if (bar) bar.style.width = pct + '%';
+
+        if (status) {
+            status.textContent = preload.status === 'running'
+                ? WCU.strings.preload_running + ': ' + done + '/' + total
+                : WCU.strings.preload_done + ' (' + done + ' url)';
+        }
+
+        if (stats) {
+            stats.innerHTML = '<div class="wcu-preload-stat"><span class="dot" style="background:#4f46e5"></span><span class="stat-label">' + done + ' URL işlendi</span></div>' +
+                '<div class="wcu-preload-stat"><span class="dot" style="background:#a855f7"></span><span class="stat-label">' + (total - done) + ' kalan</span></div>' +
+                '<div class="wcu-preload-stat"><span class="dot" style="background:#10b981"></span><span class="stat-label">Çalışıyor</span></div>';
+        }
+    }
+
+    function hidePreloadCard() {
+        var card = document.getElementById('wcu-preload-card');
+        if (card) card.style.display = 'none';
+    }
+
+    function renderLogsTable(data) {
+        var tbody = document.querySelector('#wcu-logs-table tbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        var rows = (data || []).slice(0, 100);
+        if (!rows.length) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--wcu-faint);padding:24px;">Henüz kayıt yok.</td></tr>';
+            return;
+        }
+        rows.forEach(function (l) {
+            var tagClass = 'tag-page';
+            if (l.channel === 'db_optimize') tagClass = 'tag-db';
+            if (l.channel === 'preload') tagClass = 'tag-preload';
+
+            var statusTag = '<span class="tag tag-success">Başarılı</span>';
+            if (l.action && l.action.indexOf('fail') !== -1) statusTag = '<span class="tag" style="background:#fee2e2;color:#991b1b;">Hata</span>';
+
+            var tr = document.createElement('tr');
+            tr.innerHTML = '<td class="td-num">' + fmtTime(l.t) + '</td>' +
+                '<td><span class="tag ' + tagClass + '">' + l.channel + '</span></td>' +
+                '<td style="font-weight:500;color:var(--wcu-ink);">' + l.action + '</td>' +
+                '<td>' + (l.detail || '') + '</td>' +
+                '<td>' + statusTag + '</td>';
+            tbody.appendChild(tr);
+        });
+    }
+
+    function renderCacheListTable(rows) {
+        var tbody = document.querySelector('#wcu-cachelist-table tbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        if (!rows.length) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--wcu-faint);padding:24px;">Henüz önbelleğe alınmış sayfa yok.</td></tr>';
+            return;
+        }
+        rows.forEach(function (row) {
+            var expires = row.expires_at ? fmtTime(row.expires_at) : '—';
+            var tagClass = row.variant === 'mobile' ? 'tag-mobile' : 'tag-desktop';
+            var tr = document.createElement('tr');
+            tr.innerHTML = '<td class="td-url" title="' + (row.url || '') + '">' + (row.url || '') + '</td>' +
+                '<td><span class="tag ' + tagClass + '">' + (row.variant || 'desktop') + '</span></td>' +
+                '<td class="td-num">' + (row.size_human || '') + '</td>' +
+                '<td class="td-num">' + fmtTime(row.created) + '</td>' +
+                '<td class="td-num">' + expires + '</td>' +
+                '<td><span class="tag tag-success">Aktif</span></td>';
+            tbody.appendChild(tr);
+        });
+    }
+
     function refreshStatus() {
         restFetch('/status').then(function (res) {
             if (!res.ok) return;
@@ -176,28 +400,27 @@
             renderHealth(s.health);
 
             if (s.job && s.job.status === 'running') {
-                document.getElementById('wcu-result').style.display = 'block';
-                document.getElementById('wcu-result-pre').textContent = JSON.stringify(s.job, null, 2);
-                document.getElementById('wcu-progress-val').textContent = s.job.progress || 0;
-                // Not: burada artık kendini tekrar çağırmıyor. İlerleme, gerçek WP-Cron'un
-                // (dakikada bir) tetiklenmesine bağlıydı ve cron çalışmazsa iş sonsuza kadar
-                // "running" görünüyordu. İlerleme artık driveJob() tarafından aktif olarak
-                // sürükleniyor (bkz. bindActions).
+                renderJobCard(s.job);
+            } else if (s.job && s.job.status === 'done') {
+                renderJobCard(s.job);
+                setTimeout(hideJobCard, 4000);
+            } else {
+                hideJobCard();
             }
 
             if (s.preload && s.preload.status === 'running') {
-                var el = document.getElementById('wcu-preload-status');
-                if (el) {
-                    el.textContent = WCU.strings.preload_running + ': ' + (s.preload.done || 0) + '/' + (s.preload.total || 0);
-                    setTimeout(refreshStatus, 2000);
-                }
+                renderPreloadCard(s.preload);
+                setTimeout(refreshStatus, 2000);
             } else if (s.preload && s.preload.status === 'done') {
-                var el2 = document.getElementById('wcu-preload-status');
-                if (el2 && el2.getAttribute('data-watching') === '1') {
-                    el2.textContent = WCU.strings.preload_done + ' (' + (s.preload.done || 0) + ' url)';
-                    el2.removeAttribute('data-watching');
+                renderPreloadCard(s.preload);
+                var el = document.getElementById('wcu-preload-status');
+                if (el && el.getAttribute('data-watching') === '1') {
+                    el.removeAttribute('data-watching');
                     toast(WCU.strings.preload_done, 'success');
                 }
+                setTimeout(hidePreloadCard, 4000);
+            } else {
+                hidePreloadCard();
             }
         });
     }
@@ -205,37 +428,14 @@
     function loadLogs() {
         restFetch('/logs').then(function (res) {
             if (!res.ok) return;
-            var tbody = document.querySelector('#wcu-logs-table tbody');
-            tbody.innerHTML = '';
-            (res.data || []).slice(0, 100).forEach(function (l) {
-                var tr = document.createElement('tr');
-                tr.innerHTML = '<td>' + fmtTime(l.t) + '</td><td>' + l.channel + '</td><td>' + l.action + '</td><td>' + (l.detail || '') + '</td>';
-                tbody.appendChild(tr);
-            });
+            renderLogsTable(res.data);
         });
     }
 
     function loadCacheList() {
         restFetch('/cache-list').then(function (res) {
             if (!res.ok) return;
-            var tbody = document.querySelector('#wcu-cachelist-table tbody');
-            if (!tbody) return;
-            tbody.innerHTML = '';
-            var rows = res.data || [];
-            if (!rows.length) {
-                tbody.innerHTML = '<tr><td colspan="5" style="color:#94a3b8">Henüz önbelleğe alınmış sayfa yok.</td></tr>';
-                return;
-            }
-            rows.forEach(function (row) {
-                var tr = document.createElement('tr');
-                var expires = row.expires_at ? fmtTime(row.expires_at) : '—';
-                tr.innerHTML = '<td style="max-width:420px;overflow:hidden;text-overflow:ellipsis">' + (row.url || '') + '</td>' +
-                    '<td>' + (row.variant || '') + '</td>' +
-                    '<td>' + (row.size_human || '') + '</td>' +
-                    '<td>' + fmtTime(row.created) + '</td>' +
-                    '<td>' + expires + '</td>';
-                tbody.appendChild(tr);
-            });
+            renderCacheListTable(res.data || []);
         });
     }
 
@@ -253,7 +453,89 @@
         });
     }
 
-    var MAX_JOB_STEPS = 40; // güvenlik sınırı: normalde 7-15 adımda biter
+    var MAX_PRELOAD_STEPS = 300;
+    function drivePreload(stepsLeft) {
+        if (stepsLeft <= 0) {
+            toast('Ön yükleme çok uzun sürdü, lütfen sayfayı yenileyin', 'error');
+            return;
+        }
+
+        var params = new URLSearchParams();
+        params.append('action', 'wcu_process_preload_step');
+        params.append('nonce', WCU.nonce || '');
+
+        fetch(WCU.ajax_url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: params.toString(),
+        }).then(function (r) { 
+            if (!r.ok) {
+                console.error('HTTP Hata:', r.status, r.statusText);
+                return r.text().then(function(t) { console.error('Response:', t); return null; });
+            }
+            return r.json(); 
+        }).then(function (resp) {
+            if (!resp) return;
+
+            console.log('Preload response:', resp);
+
+            if (!resp.success) {
+                var msg = resp.data || 'Ön yükleme adımı başarısız';
+                toast(msg, 'error');
+                return;
+            }
+            var data = resp.data || {};
+
+            if (data.done !== undefined && data.total !== undefined) {
+                var card = document.getElementById('wcu-preload-card');
+                var pctEl = document.getElementById('wcu-preload-pct');
+                var bar = document.getElementById('wcu-preload-bar');
+                var stats = document.getElementById('wcu-preload-stats');
+                var status = document.getElementById('wcu-preload-status');
+
+                if (card) card.style.display = 'block';
+                if (pctEl) pctEl.textContent = data.done + '/' + data.total;
+                if (bar) {
+                    var pct = data.total > 0 ? Math.round((data.done / data.total) * 100) : 0;
+                    bar.style.width = pct + '%';
+                }
+                if (status) status.textContent = 'Ön yükleme çalışıyor: ' + data.done + '/' + data.total;
+                if (stats) {
+                    var remaining = data.total - data.done;
+                    stats.innerHTML = '<div class="wcu-preload-stat"><span class="dot" style="background:#4f46e5"></span><span class="stat-label">' + data.done + ' URL işlendi</span></div>' +
+                        '<div class="wcu-preload-stat"><span class="dot" style="background:#a855f7"></span><span class="stat-label">' + remaining + ' kalan</span></div>' +
+                        '<div class="wcu-preload-stat"><span class="dot" style="background:#10b981"></span><span class="stat-label">Çalışıyor</span></div>';
+                }
+            }
+
+            // DÜZELTME: done >= total ise HER DURUMDA bitir!
+            if (data.done >= data.total || data.remaining === 0 || data.status === 'done') {
+                var statusEl = document.getElementById('wcu-preload-status');
+                if (statusEl) {
+                    statusEl.textContent = 'Ön yükleme tamamlandı! (' + data.done + ' URL)';
+                    statusEl.setAttribute('data-watching', '1');
+                }
+                
+                var statsEl = document.getElementById('wcu-preload-stats');
+                if (statsEl) {
+                    statsEl.innerHTML = '<div class="wcu-preload-stat"><span class="dot" style="background:#10b981"></span><span class="stat-label">' + data.done + ' URL işlendi</span></div>' +
+                        '<div class="wcu-preload-stat"><span class="dot" style="background:#cbd5e1"></span><span class="stat-label">0 kalan</span></div>' +
+                        '<div class="wcu-preload-stat"><span class="dot" style="background:#10b981"></span><span class="stat-label">Tamamlandı</span></div>';
+                }
+                
+                refreshStatus();
+                toast('Ön yükleme tamamlandı! (' + data.done + ' URL)', 'success');
+                return;
+            }
+
+            setTimeout(function () { drivePreload(stepsLeft - 1); }, 300);
+        }).catch(function (err) { 
+            console.error('Preload error:', err);
+            toast('Ön yükleme hatası: ' + err.message, 'error'); 
+        });
+    }
+
+    var MAX_JOB_STEPS = 40;
     function driveJob(stepsLeft) {
         if (stepsLeft <= 0) {
             toast('İşlem çok uzun sürdü, lütfen sayfayı yenileyin', 'error');
@@ -269,7 +551,7 @@
                 return;
             }
             var data = resp.data || {};
-            refreshStatus(); // ilerleme kutusunu güncel tut (kendini tekrar çağırmaz)
+            refreshStatus();
 
             if (data.error) {
                 toast(WCU.strings.failed, 'error');
@@ -280,7 +562,6 @@
                 setTimeout(function () { window.location.reload(); }, 900);
                 return;
             }
-            // Bir sonraki aşamayı hemen iste; gerçek cron'un dakikalarca beklemesine gerek yok.
             setTimeout(function () { driveJob(stepsLeft - 1); }, 150);
         }).catch(function () { toast(WCU.strings.failed, 'error'); });
     }
@@ -314,10 +595,17 @@
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: 'action=wcu_quick_action&quick=' + encodeURIComponent(action) + '&nonce=' + encodeURIComponent(WCU.nonce),
                 }).then(function (r) { return r.json(); }).then(function (r) {
-                    var resultBox = document.getElementById('wcu-result');
                     if (r && r.success) {
-                        resultBox.style.display = 'block';
-                        document.getElementById('wcu-result-pre').textContent = JSON.stringify(r.data, null, 2);
+                        var resultData = r.data || {};
+                        var jobCard = {
+                            title: 'Hızlı İşlem: ' + action,
+                            status: 'done',
+                            progress: 100,
+                            steps: [
+                                { key: action, label: action.replace(/_/g, ' '), done: true, detail: 'Tamamlandı' }
+                            ]
+                        };
+                        renderJobCard(jobCard);
                         toast(WCU.strings.done + ', sayfa yenileniyor…', 'success');
                         setTimeout(function () { window.location.reload(); }, 1200);
                     } else {
@@ -333,11 +621,8 @@
                 if (!confirm(WCU.strings.confirm_preload)) return;
                 restFetch('/preload', { method: 'POST' }).then(function (res) {
                     if (res.ok) {
-                        var el = document.getElementById('wcu-preload-status');
-                        el.setAttribute('data-watching', '1');
-                        el.textContent = WCU.strings.preload_running + ': 0/' + res.data.queued;
                         toast('Ön yükleme kuyruğa alındı (' + res.data.queued + ' url)', 'success');
-                        refreshStatus();
+                        drivePreload(MAX_PRELOAD_STEPS);
                     } else {
                         toast(WCU.strings.failed, 'error');
                     }
@@ -348,7 +633,7 @@
         document.querySelectorAll('.wcu-preset-btn').forEach(function (btn) {
             btn.addEventListener('click', function () {
                 var preset = btn.getAttribute('data-preset');
-                if (!confirm('“' + btn.textContent.trim() + '” profili uygulanacak ve önbellek temizlenecek. Devam edilsin mi?')) return;
+                if (!confirm('"' + btn.textContent.trim() + '" profili uygulanacak ve önbellek temizlenecek. Devam edilsin mi?')) return;
                 restFetch('/preset', { method: 'POST', body: JSON.stringify({ name: preset }) }).then(function (res) {
                     var box = document.getElementById('wcu-preset-result');
                     if (res.ok) {
@@ -368,8 +653,12 @@
             dbBtn.addEventListener('click', function () {
                 if (!confirm(WCU.strings.confirm_action)) return;
                 restFetch('/db-optimize', { method: 'POST' }).then(function (res) {
-                    document.getElementById('wcu-db-result').textContent = JSON.stringify(res.data, null, 2);
-                    toast(res.ok ? WCU.strings.done : WCU.strings.failed, res.ok ? 'success' : 'error');
+                    if (res.ok) {
+                        renderDbCards(res.data);
+                        toast(WCU.strings.done, 'success');
+                    } else {
+                        toast(WCU.strings.failed, 'error');
+                    }
                     refreshStatus();
                 });
             });

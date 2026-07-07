@@ -440,3 +440,243 @@
 @media (prefers-reduced-motion: reduce){
   .wcu-wrap *{ transition:none !important; animation:none !important; }
 }
+
+/* ==========================================================================
+   İşlem Durumu Kartları (JSON yerine Dashboard)
+   ========================================================================== */
+.wcu-job-card{
+  background:linear-gradient(135deg,#f0fdfa,#e0f2fe);
+  border-radius:var(--wcu-r-lg);
+  padding:20px;
+  border:1px solid #ccfbf1;
+  margin-top:16px;
+}
+.wcu-job-header{
+  display:flex; align-items:center; gap:10px; margin-bottom:14px;
+}
+.wcu-job-icon{
+  width:36px; height:36px; border-radius:10px;
+  background:var(--wcu-primary-grad);
+  display:flex; align-items:center; justify-content:center;
+  color:#fff; font-size:16px;
+  box-shadow:0 4px 12px -2px rgba(14,165,164,.4);
+}
+.wcu-job-title{ font-weight:700; font-size:14px; color:var(--wcu-ink); }
+.wcu-job-sub{ font-size:12px; color:var(--wcu-muted); }
+.wcu-job-pct{
+  margin-left:auto; font-size:12px; font-weight:700; color:var(--wcu-primary);
+  background:#ccfbf1; padding:4px 12px; border-radius:999px;
+}
+
+.wcu-step-grid{
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:10px;
+}
+.wcu-step-item{
+  background:var(--wcu-surface); padding:12px 14px; border-radius:var(--wcu-r-sm);
+  border:1px solid var(--wcu-border-soft); display:flex; align-items:center; gap:8px;
+  transition:transform .15s var(--wcu-ease), box-shadow .15s var(--wcu-ease);
+}
+.wcu-step-item:hover{ transform:translateY(-1px); box-shadow:var(--wcu-shadow-xs); }
+.wcu-step-item.done{ border-color:#bbf7d0; }
+.wcu-step-item.running{ border-color:#fed7aa; }
+.wcu-step-item.waiting{ opacity:.6; }
+.wcu-step-badge{
+  width:22px; height:22px; border-radius:50%; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:700; color:#fff;
+}
+.wcu-step-badge.ok{ background:#10b981; }
+.wcu-step-badge.run{ background:#f59e0b; }
+.wcu-step-badge.wait{ background:#cbd5e1; }
+.wcu-step-label{ font-weight:600; font-size:12px; color:var(--wcu-ink); }
+.wcu-step-detail{ font-size:11px; color:var(--wcu-muted); margin-top:1px; }
+
+/* Shimmer animasyonu */
+@keyframes wcu-shimmer{
+  0%{ transform:translateX(-100%); }
+  100%{ transform:translateX(200%); }
+}
+.wcu-shimmer-bar{
+  position:absolute; right:0; top:0; bottom:0; width:30px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.5));
+  animation:wcu-shimmer 1.8s infinite;
+}
+
+/* ==========================================================================
+   DB Optimize Sonuç Kartları
+   ========================================================================== */
+.wcu-db-grid{
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px;
+  margin-bottom:16px;
+}
+.wcu-db-card{
+  padding:16px; border-radius:12px; border:1px solid transparent;
+  position:relative; overflow:hidden;
+}
+.wcu-db-card::before{
+  content:""; position:absolute; inset:0; opacity:.15;
+  background:var(--accent); filter:blur(20px); z-index:0;
+}
+.wcu-db-card > *{ position:relative; z-index:1; }
+.wcu-db-card .db-label{
+  font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.5px;
+}
+.wcu-db-card .db-value{
+  font-size:28px; font-weight:800; margin-top:4px;
+}
+.wcu-db-card .db-sub{ font-size:12px; margin-top:2px; }
+
+.wcu-db-card.yellow{ background:linear-gradient(135deg,#fef3c7,#fde68a); border-color:#fcd34d; }
+.wcu-db-card.yellow .db-label{ color:#92400e; }
+.wcu-db-card.yellow .db-value{ color:#78350f; }
+.wcu-db-card.yellow .db-sub{ color:#a16207; }
+.wcu-db-card.yellow::before{ --accent:#f59e0b; }
+
+.wcu-db-card.blue{ background:linear-gradient(135deg,#dbeafe,#bfdbfe); border-color:#93c5fd; }
+.wcu-db-card.blue .db-label{ color:#1e40af; }
+.wcu-db-card.blue .db-value{ color:#1e3a8a; }
+.wcu-db-card.blue .db-sub{ color:#3b82f6; }
+.wcu-db-card.blue::before{ --accent:#3b82f6; }
+
+.wcu-db-card.pink{ background:linear-gradient(135deg,#fce7f3,#fbcfe8); border-color:#f9a8d4; }
+.wcu-db-card.pink .db-label{ color:#9d174d; }
+.wcu-db-card.pink .db-value{ color:#831843; }
+.wcu-db-card.pink .db-sub{ color:#db2777; }
+.wcu-db-card.pink::before{ --accent:#ec4899; }
+
+.wcu-db-card.green{ background:linear-gradient(135deg,#d1fae5,#a7f3d0); border-color:#6ee7b7; }
+.wcu-db-card.green .db-label{ color:#065f46; }
+.wcu-db-card.green .db-value{ color:#064e3b; }
+.wcu-db-card.green .db-sub{ color:#059669; }
+.wcu-db-card.green::before{ --accent:#10b981; }
+
+.wcu-db-card.purple{ background:linear-gradient(135deg,#ede9fe,#ddd6fe); border-color:#c4b5fd; }
+.wcu-db-card.purple .db-label{ color:#5b21b6; }
+.wcu-db-card.purple .db-value{ color:#4c1d95; }
+.wcu-db-card.purple .db-sub{ color:#7c3aed; }
+.wcu-db-card.purple::before{ --accent:#8b5cf6; }
+
+/* ==========================================================================
+   DB Detay Listesi
+   ========================================================================== */
+.wcu-db-detail{
+  background:var(--wcu-surface-2); padding:16px; border-radius:var(--wcu-r-sm);
+  border:1px solid var(--wcu-border-soft);
+}
+.wcu-db-row{
+  display:flex; align-items:center; gap:8px; padding:8px 0;
+  border-bottom:1px solid var(--wcu-border-soft);
+}
+.wcu-db-row:last-child{ border-bottom:none; padding-bottom:0; }
+.wcu-db-row:first-child{ padding-top:0; }
+.wcu-db-row .db-check{
+  width:20px; height:20px; border-radius:50%; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-size:10px; color:#fff; background:#10b981;
+}
+.wcu-db-row .db-table{ font-size:13px; font-weight:600; color:var(--wcu-ink); }
+.wcu-db-row .db-desc{ margin-left:auto; font-size:12px; color:var(--wcu-muted); }
+
+/* ==========================================================================
+   Preload Durum Kartı
+   ========================================================================== */
+.wcu-preload-card{
+  background:linear-gradient(135deg,#ede9fe,#ddd6fe);
+  border-radius:var(--wcu-r-lg); padding:20px; border:1px solid #c4b5fd;
+  margin-top:14px;
+}
+.wcu-preload-card .wcu-job-icon{ background:linear-gradient(135deg,#4f46e5,#7c3aed); }
+.wcu-preload-card .wcu-job-pct{ color:#4f46e5; background:#ddd6fe; }
+.wcu-preload-card .wcu-progress-track{ background:#c4b5fd; }
+.wcu-preload-card .wcu-progress-fill{ background:linear-gradient(90deg,#4f46e5,#a855f7); }
+.wcu-preload-stats{
+  display:flex; gap:16px; flex-wrap:wrap; margin-top:12px;
+}
+.wcu-preload-stat{
+  display:flex; align-items:center; gap:6px;
+}
+.wcu-preload-stat .dot{
+  width:8px; height:8px; border-radius:50%; flex-shrink:0;
+}
+.wcu-preload-stat .stat-label{
+  font-size:12px; color:#4c1d95; font-weight:600;
+}
+
+/* ==========================================================================
+   Hızlı İşlem Butonları — Grid
+   ========================================================================== */
+.wcu-action-grid{
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:12px;
+  margin-bottom:20px;
+}
+.wcu-action-btn{
+  padding:14px 16px; border-radius:var(--wcu-r-md);
+  border:1px solid var(--wcu-border); background:var(--wcu-surface);
+  cursor:pointer; font-weight:600; font-size:13px; color:var(--wcu-ink);
+  display:flex; align-items:center; gap:10px;
+  transition:border-color .15s var(--wcu-ease), background .15s var(--wcu-ease), transform .15s var(--wcu-ease);
+  box-shadow:var(--wcu-shadow-xs);
+}
+.wcu-action-btn:hover{
+  border-color:var(--wcu-primary); background:#f0fdfa; transform:translateY(-1px);
+}
+.wcu-action-btn .act-icon{
+  width:32px; height:32px; border-radius:8px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:16px; flex-shrink:0;
+}
+.wcu-action-btn .act-icon.yellow{ background:linear-gradient(135deg,#fef3c7,#f59e0b); }
+.wcu-action-btn .act-icon.blue{ background:linear-gradient(135deg,#dbeafe,#3b82f6); }
+.wcu-action-btn .act-icon.purple{ background:linear-gradient(135deg,#e0e7ff,#6366f1); }
+.wcu-action-btn .act-icon.pink{ background:linear-gradient(135deg,#fce7f3,#ec4899); }
+.wcu-action-btn .act-icon.green{ background:linear-gradient(135deg,#d1fae5,#10b981); }
+
+/* ==========================================================================
+   Tablo iyileştirmeleri
+   ========================================================================== */
+.wcu-table-wrap{ overflow-x:auto; }
+.wcu-table{ width:100%; border-collapse:collapse; font-size:13px; }
+.wcu-table thead th{
+  text-align:left; padding:12px 16px; font-weight:700; color:var(--wcu-muted);
+  font-size:11px; text-transform:uppercase; letter-spacing:.5px;
+  border-bottom:2px solid var(--wcu-border);
+}
+.wcu-table tbody tr{ border-bottom:1px solid var(--wcu-border-soft); transition:background .1s; }
+.wcu-table tbody tr:hover{ background:var(--wcu-surface-2); }
+.wcu-table tbody td{
+  padding:12px 16px; color:var(--wcu-body);
+}
+.wcu-table .td-url{
+  max-width:320px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  color:var(--wcu-ink); font-weight:500;
+}
+.wcu-table .td-num{ font-variant-numeric:tabular-nums; color:var(--wcu-muted); }
+.wcu-table .tag{
+  display:inline-block; padding:3px 10px; border-radius:999px;
+  font-size:11px; font-weight:600;
+}
+.tag-desktop{ background:#dbeafe; color:#1e40af; }
+.tag-mobile{ background:#fef3c7; color:#92400e; }
+.tag-success{ background:#dcfce7; color:#15803d; }
+.tag-running{ background:#dbeafe; color:#1e40af; }
+.tag-page{ background:#dbeafe; color:#1e40af; }
+.tag-db{ background:#fef3c7; color:#92400e; }
+.tag-preload{ background:#fce7f3; color:#9d174d; }
+
+/* ==========================================================================
+   Dark mode overrides for new components
+   ========================================================================== */
+#wcu-app.wcu-dark .wcu-job-card{ background:linear-gradient(135deg,#0b1220,#111827); border-color:#1f2937; }
+#wcu-app.wcu-dark .wcu-step-item{ background:#111827; border-color:#1f2937; }
+#wcu-app.wcu-dark .wcu-step-item.done{ border-color:#14532d; }
+#wcu-app.wcu-dark .wcu-step-item.running{ border-color:#7c2d12; }
+#wcu-app.wcu-dark .wcu-step-badge.wait{ background:#374151; }
+#wcu-app.wcu-dark .wcu-db-detail{ background:#0b1220; border-color:#1f2937; }
+#wcu-app.wcu-dark .wcu-db-row{ border-bottom-color:#1f2937; }
+#wcu-app.wcu-dark .wcu-preload-card{ background:linear-gradient(135deg,#1e1b4b,#312e81); border-color:#4338ca; }
+#wcu-app.wcu-dark .wcu-preload-stat .stat-label{ color:#c4b5fd; }
+#wcu-app.wcu-dark .wcu-action-btn{ background:#111827; border-color:#1f2937; color:#e2e8f0; }
+#wcu-app.wcu-dark .wcu-action-btn:hover{ border-color:var(--wcu-primary); background:#0b1220; }
+#wcu-app.wcu-dark .wcu-table tbody tr{ border-bottom-color:#1f2937; }
+#wcu-app.wcu-dark .wcu-table tbody tr:hover{ background:#0b1220; }
+#wcu-app.wcu-dark .wcu-table .td-url{ color:#e2e8f0; }

@@ -62,10 +62,37 @@ class RestApi {
         $disk_free  = @disk_free_space( ABSPATH );
         $disk_used  = ( $disk_total && $disk_free ) ? ( $disk_total - $disk_free ) : null;
 
+        // ================================================================
+        // DÜZELTME: Preload status'ü tutarlı bir şekilde al
+        // ================================================================
+        $preload_status = Preloader::status();
+        
+        // Eğer status null veya boşsa, option'dan doğrudan oku
+        if (empty($preload_status)) {
+            $preload_status = get_option('wcu_preload_status', array());
+            $preload_queue = get_option('wcu_preload_queue', array());
+            
+            if (!empty($preload_status)) {
+                $done = isset($preload_status['done']) ? intval($preload_status['done']) : 0;
+                $total = isset($preload_status['total']) ? intval($preload_status['total']) : 0;
+                
+                // total 0 ise ve kuyruk varsa, total'ı hesapla
+                if ($total === 0 && !empty($preload_queue)) {
+                    $total = $done + count($preload_queue);
+                    $preload_status['total'] = $total;
+                    update_option('wcu_preload_status', $preload_status);
+                }
+                
+                $preload_status['status'] = empty($preload_queue) && $done > 0 ? 'done' : 'running';
+                $preload_status['done'] = $done;
+                $preload_status['remaining'] = count($preload_queue);
+            }
+        }
+
         return rest_ensure_response( array(
             'page_cache'  => PageCache::stats(),
             'job'         => get_option( Cleaner::JOB_OPTION, null ),
-            'preload'     => Preloader::status(),
+            'preload'     => $preload_status,
             'db_last_run' => get_option( 'wcu_db_last_run', 0 ),
             'log_counts'  => Logger::counts_by_channel(),
             'environment' => array(
@@ -96,8 +123,36 @@ class RestApi {
     }
 
     public static function preload( \WP_REST_Request $req ) {
+        // ================================================================
+        // DÜZELTME: Preloader başlatıldıktan sonra status bilgisini de döndür
+        // ================================================================
         $n = Preloader::start();
-        return rest_ensure_response( array( 'ok' => true, 'queued' => $n ) );
+        
+        // Başlatma sonrası status'ü al ve total'ın set edildiğinden emin ol
+        $status = Preloader::status();
+        
+        // Eğer status boşsa veya total yoksa, manuel oluştur
+        if (empty($status) || !isset($status['total']) || $status['total'] === 0) {
+            $preload_status = get_option('wcu_preload_status', array());
+            $preload_queue = get_option('wcu_preload_queue', array());
+            
+            $total = count($preload_queue);
+            $done = 0;
+            
+            // total'ı option'a kaydet (sabit kalacak)
+            $preload_status['total'] = $total;
+            $preload_status['done'] = $done;
+            $preload_status['status'] = 'running';
+            update_option('wcu_preload_status', $preload_status);
+            
+            $status = $preload_status;
+        }
+        
+        return rest_ensure_response( array( 
+            'ok' => true, 
+            'queued' => $n,
+            'status' => $status
+        ) );
     }
 
     public static function db_optimize( \WP_REST_Request $req ) {

@@ -4,71 +4,108 @@ namespace WCU;
 if ( ! defined( 'ABSPATH' ) ) exit;
 
 class DbOptimizer {
-    public static function run( $tasks = array() ) {
+
+    public static function run() {
         global $wpdb;
         $results = array();
-        $tasks   = ! empty( $tasks ) ? $tasks : array(
-            'revisions', 'auto_drafts', 'trashed_posts', 'spam_comments',
-            'trashed_comments', 'expired_transients', 'orphan_postmeta', 'optimize_tables',
-        );
 
-        if ( in_array( 'revisions', $tasks, true ) ) {
-            $results['revisions'] = (int) $wpdb->query( "DELETE FROM {$wpdb->posts} WHERE post_type = 'revision'" );
-        }
-        if ( in_array( 'auto_drafts', $tasks, true ) ) {
-            $results['auto_drafts'] = (int) $wpdb->query( "DELETE FROM {$wpdb->posts} WHERE post_status = 'auto-draft'" );
-        }
-        if ( in_array( 'trashed_posts', $tasks, true ) ) {
-            $results['trashed_posts'] = (int) $wpdb->query( "DELETE FROM {$wpdb->posts} WHERE post_status = 'trash'" );
-        }
-        if ( in_array( 'spam_comments', $tasks, true ) ) {
-            $results['spam_comments'] = (int) $wpdb->query( "DELETE FROM {$wpdb->comments} WHERE comment_approved = 'spam'" );
-        }
-        if ( in_array( 'trashed_comments', $tasks, true ) ) {
-            $results['trashed_comments'] = (int) $wpdb->query( "DELETE FROM {$wpdb->comments} WHERE comment_approved = 'trash'" );
-        }
-        if ( in_array( 'expired_transients', $tasks, true ) ) {
-            $results['expired_transients'] = self::delete_expired_transients();
-        }
-        if ( in_array( 'orphan_postmeta', $tasks, true ) ) {
-            $results['orphan_postmeta'] = (int) $wpdb->query(
-                "DELETE pm FROM {$wpdb->postmeta} pm LEFT JOIN {$wpdb->posts} p ON p.ID = pm.post_id WHERE p.ID IS NULL"
-            );
-        }
-        if ( in_array( 'optimize_tables', $tasks, true ) ) {
-            $results['optimize_tables'] = self::optimize_tables();
+        // 1. Post revisions
+        $rev = $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type = 'revision'" );
+        if ( $rev ) {
+            $wpdb->query( "DELETE FROM {$wpdb->posts} WHERE post_type = 'revision'" );
+            $results['revisions'] = (int) $rev;
+        } else {
+            $results['revisions'] = 0;
         }
 
-        update_option( 'wcu_db_last_run', time(), false );
-        Logger::log( 'db_optimize', 'run', wp_json_encode( $results ) );
-        return $results;
-    }
+        // 2. Auto drafts
+        $ad = $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_status = 'auto-draft'" );
+        if ( $ad ) {
+            $wpdb->query( "DELETE FROM {$wpdb->posts} WHERE post_status = 'auto-draft'" );
+            $results['auto_drafts'] = (int) $ad;
+        } else {
+            $results['auto_drafts'] = 0;
+        }
 
-    protected static function delete_expired_transients() {
-        global $wpdb;
-        $now   = time();
-        $count = 0;
-        $rows  = $wpdb->get_results( "SELECT option_name, option_value FROM {$wpdb->options} WHERE option_name LIKE '\\_transient\\_timeout\\_%'" );
-        foreach ( $rows as $row ) {
-            if ( (int) $row->option_value < $now ) {
-                $key = str_replace( '_transient_timeout_', '', $row->option_name );
-                $wpdb->query( $wpdb->prepare(
-                    "DELETE FROM {$wpdb->options} WHERE option_name IN (%s,%s)",
-                    '_transient_' . $key,
-                    '_transient_timeout_' . $key
-                ) );
-                $count++;
+        // 3. Trashed posts
+        $tp = $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_status = 'trash'" );
+        if ( $tp ) {
+            $wpdb->query( "DELETE FROM {$wpdb->posts} WHERE post_status = 'trash'" );
+            $results['trashed_posts'] = (int) $tp;
+        } else {
+            $results['trashed_posts'] = 0;
+        }
+
+        // 4. Spam comments
+        $sc = $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->comments} WHERE comment_approved = 'spam'" );
+        if ( $sc ) {
+            $wpdb->query( "DELETE FROM {$wpdb->comments} WHERE comment_approved = 'spam'" );
+            $results['spam_comments'] = (int) $sc;
+        } else {
+            $results['spam_comments'] = 0;
+        }
+
+        // 5. Trashed comments
+        $tc = $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->comments} WHERE comment_approved = 'trash'" );
+        if ( $tc ) {
+            $wpdb->query( "DELETE FROM {$wpdb->comments} WHERE comment_approved = 'trash'" );
+            $results['trashed_comments'] = (int) $tc;
+        } else {
+            $results['trashed_comments'] = 0;
+        }
+
+        // 6. Expired transients
+        $time = time();
+        $expired = $wpdb->get_results( $wpdb->prepare(
+            "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s AND option_value < %d",
+            $wpdb->esc_like( '_transient_timeout_' ) . '%',
+            $time
+        ) );
+        $et = 0;
+        if ( $expired ) {
+            foreach ( $expired as $row ) {
+                $transient = str_replace( '_transient_timeout_', '', $row->option_name );
+                delete_transient( $transient );
+                $et++;
             }
         }
-        return $count;
-    }
+        $results['expired_transients'] = $et;
 
-    protected static function optimize_tables() {
-        global $wpdb;
-        $tables = $wpdb->get_col( 'SHOW TABLES' );
-        foreach ( $tables as $t ) {
-            $wpdb->query( "OPTIMIZE TABLE `{$t}`" );
+        // 7. Orphaned postmeta
+        $opm = $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->postmeta} pm LEFT JOIN {$wpdb->posts} p ON pm.post_id = p.ID WHERE p.ID IS NULL" );
+        if ( $opm ) {
+            $wpdb->query( "DELETE pm FROM {$wpdb->postmeta} pm LEFT JOIN {$wpdb->posts} p ON pm.post_id = p.ID WHERE p.ID IS NULL" );
+            $results['orphan_postmeta'] = (int) $opm;
+        } else {
+            $results['orphan_postmeta'] = 0;
         }
-        return count( $tables );
+
+        // 8. Orphaned commentmeta
+        $ocm = $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->commentmeta} cm LEFT JOIN {$wpdb->comments} c ON cm.comment_id = c.comment_ID WHERE c.comment_ID IS NULL" );
+        if ( $ocm ) {
+            $wpdb->query( "DELETE cm FROM {$wpdb->commentmeta} cm LEFT JOIN {$wpdb->comments} c ON cm.comment_id = c.comment_ID WHERE c.comment_ID IS NULL" );
+            $results['orphan_commentmeta'] = (int) $ocm;
+        } else {
+            $results['orphan_commentmeta'] = 0;
+        }
+
+        // 9. Orphaned usermeta
+        $oum = $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->usermeta} um LEFT JOIN {$wpdb->users} u ON um.user_id = u.ID WHERE u.ID IS NULL" );
+        if ( $oum ) {
+            $wpdb->query( "DELETE um FROM {$wpdb->usermeta} um LEFT JOIN {$wpdb->users} u ON um.user_id = u.ID WHERE u.ID IS NULL" );
+            $results['orphan_usermeta'] = (int) $oum;
+        } else {
+            $results['orphan_usermeta'] = 0;
+        }
+
+        // 10. Optimize tables
+        $tables = $wpdb->get_results( "SHOW TABLES", ARRAY_N );
+        foreach ( $tables as $table ) {
+            $wpdb->query( "OPTIMIZE TABLE {$table[0]}" );
+        }
+        $results['tables_optimized'] = count( $tables );
+
+        update_option( 'wcu_db_last_run', time() );
+        return $results;
     }
 }

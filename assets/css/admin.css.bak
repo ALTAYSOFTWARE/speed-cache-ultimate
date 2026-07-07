@@ -1,0 +1,169 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+.wcu-wrap { padding:22px; font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial; background:#f2f7fb; border-radius:12px; }
+.wcu-topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; gap:12px; flex-wrap:wrap; }
+.wcu-title h1 { margin:0; font-size:20px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.wcu-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;letter-spacing:.2px}
+.wcu-badge-active{background:#dcfce7;color:#15803d}
+.wcu-badge-version{background:#eef2ff;color:#4338ca}
+.wcu-pro { background:#ffedd5;color:#c2410c;font-weight:700;padding:2px 8px;border-radius:6px;margin-left:8px;font-size:12px;vertical-align:middle; }
+.wcu-sub { margin:2px 0 0;color:#64748b;font-size:13px; }
+.wcu-actions { display:flex; gap:10px; align-items:center; }
+.wcu-btn { padding:8px 12px;border-radius:8px;border:1px solid transparent;font-weight:600; text-decoration:none; display:inline-block; cursor:pointer; background:#fff; }
+.wcu-btn-outline { background:transparent;color:#2563eb;border:1px solid #cfe0ff;padding:8px 12px;border-radius:8px; }
+.wcu-btn-danger { background:#ef4444;color:#fff;border-radius:8px;padding:10px 14px; box-shadow:0 6px 20px rgba(239,68,68,0.12); border:none; }
+
+/* Environment banner */
+.wcu-env-banner{display:flex;flex-wrap:wrap;gap:22px;background:linear-gradient(135deg,#4f46e5,#7c3aed);border-radius:12px;padding:18px 22px;margin-bottom:16px;box-shadow:0 10px 30px rgba(79,70,229,0.25)}
+.wcu-env-item{display:flex;align-items:center;gap:10px;color:#fff;min-width:140px}
+.wcu-env-icon{font-size:22px;line-height:1}
+.wcu-env-label{font-size:11px;opacity:.8;text-transform:uppercase;letter-spacing:.4px}
+.wcu-env-value{font-weight:700;font-size:14px}
+
+/* Disk usage card */
+.wcu-disk-card{background:#fff;padding:14px 18px;border-radius:10px;box-shadow:0 8px 24px rgba(2,6,23,0.04);margin-bottom:18px}
+.wcu-disk-head{display:flex;align-items:center;gap:8px;font-weight:600;color:#334155;margin-bottom:8px;font-size:13px}
+.wcu-disk-figures{margin-left:auto;color:#64748b;font-weight:500;font-size:12px}
+.wcu-progress-track{background:#e2e8f0;border-radius:999px;height:10px;overflow:hidden}
+.wcu-progress-fill{background:linear-gradient(90deg,#0ea5a4,#22d3ee);height:100%;border-radius:999px;transition:width .4s ease}
+
+.wcu-grid { display:flex; gap:20px; align-items:flex-start; flex-wrap:wrap; }
+.wcu-left { width:220px; }
+.wcu-sidebar { background:#0b1220;color:#fff;padding:14px;border-radius:10px;min-height:520px;box-shadow:0 8px 24px rgba(2,6,23,0.06); }
+.wcu-sidebar ul{list-style:none;padding:0;margin:0}
+.wcu-sidebar li{padding:10px;border-radius:6px;color:#cbd5e1;margin-bottom:6px;cursor:pointer;transition:background .15s ease;display:flex;align-items:center;gap:8px}
+.wcu-sidebar li .dashicons{font-size:16px;width:16px;height:16px}
+.wcu-sidebar li:hover{background:#1e293b}
+.wcu-sidebar li.active{background:#0ea5a4;color:#fff;font-weight:700}
+.wcu-sidebar li.wcu-sidebar-settings{margin-top:10px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.12)}
+.wcu-main{flex:1;min-width:320px}
+.wcu-cards{display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+.card{background:#fff;padding:16px;border-radius:10px;box-shadow:0 8px 24px rgba(2,6,23,0.04);width:220px;transition:background .2s ease,color .2s ease;position:relative;overflow:hidden}
+.card .label{color:#6b7280;font-size:13px}
+.card .value{font-weight:700;margin-top:8px;font-size:18px}
+.card-icon{font-size:20px;margin-bottom:6px}
+.card-blob::after{content:"";position:absolute;top:-30px;right:-30px;width:90px;height:90px;border-radius:50%;opacity:.12;z-index:0}
+.card-blob .card-icon,.card-blob .label,.card-blob .value{position:relative;z-index:1}
+.card-blue::after{background:#2563eb}
+.card-teal::after{background:#0ea5a4}
+.card-purple::after{background:#7c3aed}
+.card-orange::after{background:#f97316}
+.wcu-dashboard-main{display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap}
+.wcu-score{width:320px;background:#fff;padding:20px;border-radius:10px;text-align:center;box-shadow:0 8px 24px rgba(2,6,23,0.04)}
+.score-circle{height:120px;width:120px;border-radius:50%;background:conic-gradient(#0ea5a4 var(--wcu-score-deg,0deg),#ecfdf5 0deg);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;position:relative}
+.score-circle::before{content:"";position:absolute;inset:8px;border-radius:50%;background:#fff}
+.score-circle span{position:relative;z-index:1;font-size:32px;font-weight:700;color:#059669}
+.wcu-score-list{list-style:none;padding:0;margin:14px 0 0;text-align:left;font-size:13px;color:#475569}
+.wcu-quick{flex:1;background:#fff;padding:20px;border-radius:10px;box-shadow:0 8px 24px rgba(2,6,23,0.04);min-width:280px}
+.wcu-quick.full{width:100%}
+.wcu-chart-wrap{position:relative;height:260px;overflow:hidden}
+.wcu-chart-wrap canvas{max-width:100%}
+.wcu-chart-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:13px;text-align:center;padding:20px}
+.quick-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.wcu-quick .button{padding:8px 12px;border-radius:8px;border:1px solid #e6eef6;background:transparent;cursor:pointer}
+.wcu-result{margin-top:14px;background:#fff;padding:14px;border-radius:8px;border:1px solid #eef6fb}
+#wcu-result-pre, #wcu-db-result{white-space:pre-wrap;word-break:break-word;font-size:13px;color:#0b1220;max-height:320px;overflow:auto}
+.wcu-panel{margin-top:4px}
+
+/* Health / performance audit */
+.wcu-health-card{margin-top:16px}
+.wcu-health-card h3{margin:0 0 4px}
+.wcu-health-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin-top:12px}
+.wcu-health-item{display:flex;gap:10px;align-items:flex-start;padding:12px;border-radius:8px;background:#f8fafc;border:1px solid #eef2f7}
+.wcu-health-item.ok{background:#f0fdf4;border-color:#bbf7d0}
+.wcu-health-item.warn{background:#fff7ed;border-color:#fed7aa}
+.wcu-health-icon{font-size:15px;font-weight:700;line-height:1.4}
+.wcu-health-item.ok .wcu-health-icon{color:#16a34a}
+.wcu-health-item.warn .wcu-health-icon{color:#ea580c}
+.wcu-health-label{font-weight:600;font-size:12.5px;color:#1e293b}
+.wcu-health-detail{font-size:11.5px;color:#64748b;margin-top:2px;line-height:1.4}
+#wcu-app.wcu-dark .wcu-health-item{background:#111827;border-color:#1f2937}
+#wcu-app.wcu-dark .wcu-health-item.ok{background:#052e1c;border-color:#14532d}
+#wcu-app.wcu-dark .wcu-health-item.warn{background:#2a1a06;border-color:#7c2d12}
+#wcu-app.wcu-dark .wcu-health-label{color:#e2e8f0}
+#wcu-app.wcu-dark .wcu-health-detail{color:#94a3b8}
+
+/* Settings select control */
+.wcu-setting-control select{padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;min-width:200px;font-family:Inter,system-ui;background:#fff}
+#wcu-app.wcu-dark .wcu-setting-control select{background:#0b1220;border-color:#1f2937;color:#e2e8f0}
+
+/* Settings page — modern card layout */
+.wcu-settings-header{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:20px}
+.wcu-settings-header h1{margin:0;font-size:20px;font-family:Inter,system-ui}
+.wcu-settings-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.wcu-settings-tabs a{padding:9px 16px;border-radius:999px;background:#fff;color:#475569;font-weight:600;font-size:13px;text-decoration:none;box-shadow:0 2px 8px rgba(2,6,23,0.05);transition:all .15s ease;border:1px solid transparent}
+.wcu-settings-tabs a:hover{background:#f8fafc;color:#0f172a}
+.wcu-settings-tabs a.active{background:#0ea5a4;color:#fff;box-shadow:0 6px 18px rgba(14,165,164,0.3)}
+
+.wcu-setting-card{background:#fff;border-radius:12px;padding:22px 24px;box-shadow:0 8px 24px rgba(2,6,23,0.04);margin-bottom:16px;max-width:900px}
+.wcu-setting-card h2{margin:0 0 4px;font-size:15px;font-family:Inter,system-ui;color:#0f172a}
+.wcu-setting-card .wcu-card-desc{color:#64748b;font-size:12.5px;margin:0 0 6px}
+.wcu-setting-row{display:flex;justify-content:space-between;align-items:center;gap:24px;padding:14px 0;border-bottom:1px solid #f1f5f9}
+.wcu-setting-row:first-of-type{padding-top:14px}
+.wcu-setting-row:last-child{border-bottom:none}
+.wcu-setting-info{flex:1;min-width:0}
+.wcu-setting-label{font-weight:600;font-size:13.5px;color:#1e293b;display:block}
+.wcu-setting-info p{margin:4px 0 0;color:#64748b;font-size:12px;line-height:1.5}
+.wcu-setting-control{flex-shrink:0}
+.wcu-setting-control input[type=number],.wcu-setting-control input[type=text],.wcu-setting-control input[type=password]{padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;min-width:200px;font-family:Inter,system-ui}
+.wcu-setting-control input:focus{outline:none;border-color:#0ea5a4;box-shadow:0 0 0 3px rgba(14,165,164,0.12)}
+.wcu-setting-full{padding:14px 0}
+.wcu-setting-full textarea{width:100%;padding:12px;border:1px solid #e2e8f0;border-radius:8px;font-family:ui-monospace,Consolas,monospace;font-size:12.5px;resize:vertical}
+.wcu-setting-full textarea:focus{outline:none;border-color:#0ea5a4;box-shadow:0 0 0 3px rgba(14,165,164,0.12)}
+.wcu-setting-full p.description{margin:6px 0 0;color:#64748b;font-size:12px}
+.wcu-code-block{width:100%;padding:14px;border:1px solid #e2e8f0;border-radius:8px;font-family:ui-monospace,Consolas,monospace;font-size:12px;background:#f8fafc;color:#1e293b}
+.wcu-card-sep{border:none;border-top:1px solid #f1f5f9;margin:18px 0}
+
+.wcu-preset-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:14px}
+.wcu-preset-card{background:#f8fafc;border-radius:10px;border-left:4px solid #94a3b8;padding:16px 18px;display:flex;flex-direction:column;gap:8px}
+.wcu-preset-card-head{font-size:14px}
+.wcu-preset-card p{margin:0;font-size:12.5px;color:#64748b;line-height:1.5;flex:1}
+.wcu-preset-card .button{align-self:flex-start}
+#wcu-app.wcu-dark .wcu-preset-card{background:#0b1220}
+#wcu-app.wcu-dark .wcu-preset-card p{color:#94a3b8}
+
+/* Toggle switch */
+.wcu-switch{position:relative;display:inline-block;width:42px;height:24px;flex-shrink:0}
+.wcu-switch input{opacity:0;width:0;height:0;position:absolute}
+.wcu-switch .wcu-slider{position:absolute;cursor:pointer;inset:0;background:#cbd5e1;border-radius:999px;transition:.2s ease}
+.wcu-switch .wcu-slider::before{content:"";position:absolute;height:18px;width:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s ease;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.wcu-switch input:checked + .wcu-slider{background:#0ea5a4}
+.wcu-switch input:checked + .wcu-slider::before{transform:translateX(18px)}
+.wcu-switch input:focus-visible + .wcu-slider{box-shadow:0 0 0 3px rgba(14,165,164,0.25)}
+
+.wcu-save-bar{position:sticky;bottom:0;padding:16px 0 4px;margin-top:4px}
+.wcu-btn-primary{background:#0ea5a4;color:#fff;border:none;border-radius:8px;padding:10px 22px;font-weight:600;font-size:13.5px;cursor:pointer;box-shadow:0 8px 20px rgba(14,165,164,0.25);transition:background .15s ease}
+.wcu-btn-primary:hover{background:#0d9488;color:#fff}
+
+/* Dark mode — settings */
+#wcu-app.wcu-dark .wcu-settings-tabs a{background:#111827;color:#94a3b8;box-shadow:none;border:1px solid #1f2937}
+#wcu-app.wcu-dark .wcu-settings-tabs a.active{background:#0ea5a4;color:#fff;border-color:transparent}
+#wcu-app.wcu-dark .wcu-setting-card{background:#111827;color:#e2e8f0;box-shadow:none;border:1px solid #1f2937}
+#wcu-app.wcu-dark .wcu-setting-card h2{color:#e2e8f0}
+#wcu-app.wcu-dark .wcu-setting-row{border-bottom-color:#1f2937}
+#wcu-app.wcu-dark .wcu-setting-label{color:#e2e8f0}
+#wcu-app.wcu-dark .wcu-setting-control input,#wcu-app.wcu-dark .wcu-setting-full textarea{background:#0b1220;border-color:#1f2937;color:#e2e8f0}
+#wcu-app.wcu-dark .wcu-code-block{background:#0b1220;border-color:#1f2937;color:#cbd5e1}
+#wcu-app.wcu-dark .wcu-card-sep{border-top-color:#1f2937}
+
+/* Toasts */
+.wcu-toast{position:fixed;bottom:24px;right:24px;background:#0b1220;color:#fff;padding:12px 18px;border-radius:8px;font-size:13px;opacity:0;transform:translateY(10px);transition:all .3s ease;z-index:99999;box-shadow:0 8px 24px rgba(2,6,23,0.2)}
+.wcu-toast.show{opacity:1;transform:translateY(0)}
+.wcu-toast-success{background:#059669}
+.wcu-toast-error{background:#ef4444}
+
+/* Dark mode */
+#wcu-app.wcu-dark.wcu-wrap{background:#0b1220}
+#wcu-app.wcu-dark .wcu-sub{color:#94a3b8}
+#wcu-app.wcu-dark .card,#wcu-app.wcu-dark .wcu-score,#wcu-app.wcu-dark .wcu-quick,#wcu-app.wcu-dark .wcu-result{background:#111827;color:#e2e8f0;box-shadow:none;border:1px solid #1f2937}
+#wcu-app.wcu-dark .card .label{color:#94a3b8}
+#wcu-app.wcu-dark #wcu-result-pre,#wcu-app.wcu-dark #wcu-db-result{color:#e2e8f0}
+#wcu-app.wcu-dark .wcu-btn-outline{color:#93c5fd;border-color:#1e3a5f}
+#wcu-app.wcu-dark .wcu-score-list{color:#cbd5e1}
+#wcu-app.wcu-dark table.widefat{background:#111827;color:#e2e8f0}
+#wcu-app.wcu-dark .wcu-disk-card{background:#111827;color:#e2e8f0;box-shadow:none;border:1px solid #1f2937}
+#wcu-app.wcu-dark .wcu-disk-head{color:#e2e8f0}
+#wcu-app.wcu-dark .wcu-progress-track{background:#1f2937}
+#wcu-app.wcu-dark .score-circle::before{background:#111827}
+#wcu-app.wcu-dark .wcu-badge-active{background:#064e3b;color:#6ee7b7}
+#wcu-app.wcu-dark .wcu-badge-version{background:#1e1b4b;color:#a5b4fc}

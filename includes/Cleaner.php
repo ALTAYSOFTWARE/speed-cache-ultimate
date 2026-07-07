@@ -35,7 +35,7 @@ class Cleaner {
     public static function ajax_quick_action() {
         if ( ! current_user_can( 'manage_options' ) ) wp_send_json_error( 'unauthorized', 403 );
         check_admin_referer( 'wcu_clear_nonce', 'nonce' );
-        $action = sanitize_text_field( $_POST['quick'] ?? '' );
+        $action = sanitize_text_field( wp_unslash( $_POST['quick'] ?? '' ) );
 
         $res = array( 'action' => $action, 'result' => null );
         try {
@@ -182,27 +182,32 @@ class Cleaner {
 
     public static function delete_transients_batch( $limit = 500 ) {
         global $wpdb;
-        $options_table = $wpdb->options;
+
         $like1 = $wpdb->esc_like( '_transient_' ) . '%';
-        $rows  = $wpdb->get_col( $wpdb->prepare( "SELECT option_name FROM {$options_table} WHERE option_name LIKE %s LIMIT %d", $like1, $limit ) );
+        $rows  = $wpdb->get_col( $wpdb->prepare( "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s LIMIT %d", $like1, $limit ) );
         $deleted = 0;
+
         if ( $rows ) {
             foreach ( $rows as $name ) {
-                $wpdb->delete( $options_table, array( 'option_name' => $name ), array( '%s' ) );
+                $transient_name = str_replace( '_transient_', '', $name );
+                delete_transient( $transient_name );
                 $deleted++;
             }
         }
+
         $like2 = $wpdb->esc_like( '_site_transient_' ) . '%';
         if ( $deleted < $limit ) {
             $rem   = $limit - $deleted;
-            $rows2 = $wpdb->get_col( $wpdb->prepare( "SELECT option_name FROM {$options_table} WHERE option_name LIKE %s LIMIT %d", $like2, $rem ) );
+            $rows2 = $wpdb->get_col( $wpdb->prepare( "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s LIMIT %d", $like2, $rem ) );
             if ( $rows2 ) {
                 foreach ( $rows2 as $name ) {
-                    $wpdb->delete( $options_table, array( 'option_name' => $name ), array( '%s' ) );
+                    $transient_name = str_replace( '_site_transient_', '', $name );
+                    delete_site_transient( $transient_name );
                     $deleted++;
                 }
             }
         }
+
         return $deleted;
     }
 
@@ -223,10 +228,6 @@ class Cleaner {
         return $results;
     }
 
-    /**
-     * Empties a directory's contents recursively but keeps the directory itself.
-     * Public so PageCache and other modules can reuse the same safe recursive delete.
-     */
     public static function rrmdir_contents( $dir ) {
         if ( ! is_dir( $dir ) ) return false;
         $items = scandir( $dir );
@@ -237,7 +238,8 @@ class Cleaner {
             if ( is_dir( $path ) ) {
                 $ok = self::rrmdir_full( $path ) && $ok;
             } else {
-                $ok = @unlink( $path ) && $ok;
+                $delete_result = wp_delete_file( $path );
+                $ok = ( $delete_result === true ) && $ok;
             }
         }
         return $ok;
@@ -245,18 +247,18 @@ class Cleaner {
 
     private static function rrmdir_full( $dir ) {
         if ( ! is_dir( $dir ) ) return false;
-        $items = scandir( $dir );
-        $ok    = true;
-        foreach ( $items as $item ) {
-            if ( $item === '.' || $item === '..' ) continue;
-            $path = $dir . DIRECTORY_SEPARATOR . $item;
-            if ( is_dir( $path ) ) {
-                $ok = self::rrmdir_full( $path ) && $ok;
-            } else {
-                $ok = @unlink( $path ) && $ok;
-            }
+
+        global $wp_filesystem;
+        if ( empty( $wp_filesystem ) ) {
+            require_once( ABSPATH . 'wp-admin/includes/file.php' );
+            WP_Filesystem();
         }
-        return @rmdir( $dir ) && $ok;
+
+        if ( ! empty( $wp_filesystem ) ) {
+            return $wp_filesystem->delete( $dir, true );
+        }
+
+        return false;
     }
 
     public static function clear_object_cache() {
