@@ -32,21 +32,37 @@ if ( ! empty( $_COOKIE ) ) {
     }
 }
 
+// Sanitize and normalize host
 $wcu_host_raw = isset( $_SERVER['HTTP_HOST'] ) ? (string) $_SERVER['HTTP_HOST'] : 'default';
+// Strip optional port
+$wcu_host_raw = preg_replace( '/:\d+$/', '', $wcu_host_raw );
 $wcu_host     = preg_replace( '/[^a-z0-9\.\-]/i', '_', $wcu_host_raw );
+if ( strlen( $wcu_host ) > 64 ) $wcu_host = substr( $wcu_host, 0, 64 );
 
+// Request URI handling with decoding & normalization
 $wcu_request_uri  = isset( $_SERVER['REQUEST_URI'] ) ? (string) $_SERVER['REQUEST_URI'] : '/';
 $wcu_uri_path     = parse_url( $wcu_request_uri, PHP_URL_PATH );
+$wcu_uri_path     = $wcu_uri_path === null ? '/' : (string) $wcu_uri_path;
+// Decode percent-encoding to detect encoded traversal like %2e%2e
+$wcu_uri_path     = rawurldecode( $wcu_uri_path );
+// Remove null bytes
+$wcu_uri_path     = str_replace( "\0", '', $wcu_uri_path );
+// Normalize repeated slashes
+$wcu_uri_path     = preg_replace( '#/+#', '/', $wcu_uri_path );
+// Trim and limit length
 $wcu_uri          = rtrim( (string) $wcu_uri_path, '/' );
 if ( $wcu_uri === '' ) $wcu_uri = '/index';
+if ( strlen( $wcu_uri ) > 200 ) $wcu_uri = substr( $wcu_uri, 0, 200 );
 
-// Basic path-traversal guard now that we no longer rely on WP sanitizers.
+// Path-traversal guard after decoding
 if ( strpos( $wcu_uri, '..' ) !== false ) return;
 
 $wcu_ua      = isset( $_SERVER['HTTP_USER_AGENT'] ) ? (string) $_SERVER['HTTP_USER_AGENT'] : '';
 $wcu_variant = preg_match( '/Mobile|Android|iP(hone|od|ad)/i', $wcu_ua ) ? 'mobile' : 'desktop';
 
-$wcu_base = WP_CONTENT_DIR . '/cache/wcu-page-cache/' . $wcu_host . $wcu_uri . '/' . $wcu_variant;
+// Use a deterministic short fragment (hash) for filesystem safety and length control
+$wcu_frag = md5( $wcu_host . '|' . $wcu_uri );
+$wcu_base = WP_CONTENT_DIR . '/cache/wcu-page-cache/' . $wcu_host . '/' . $wcu_frag . '/' . $wcu_variant;
 $wcu_meta = $wcu_base . '.meta.json';
 $wcu_html = $wcu_base . '.html';
 
@@ -64,10 +80,17 @@ if ( is_readable( $wcu_meta ) && is_readable( $wcu_html ) ) {
         header( 'X-WCU-Cache-Age: ' . intval( time() - $wcu_created ) );
 
         if ( $wcu_accepts_gzip && is_readable( $wcu_gz ) ) {
+            // Serve gzipped file and set Vary
             header( 'Content-Encoding: gzip' );
+            header( 'Vary: Accept-Encoding' );
             header( 'Content-Type: text/html; charset=UTF-8' );
             if ( ! @readfile( $wcu_gz ) ) {
-                header( 'Content-Encoding:' );
+                // Remove Content-Encoding header if fallback
+                if ( function_exists( 'header_remove' ) ) {
+                    header_remove( 'Content-Encoding' );
+                } else {
+                    header( 'Content-Encoding:' );
+                }
                 @readfile( $wcu_html );
             }
         } else {
